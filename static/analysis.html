@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务分析 - 财务保障</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+        }
+        .toast-notification {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .touch-feedback {
+            transition: transform 0.1s ease;
+        }
+        .touch-feedback:active {
+            transform: scale(0.98);
+        }
+        .chart-container {
+            height: 300px;
+        }
+        .tab-active {
+            background: linear-gradient(135deg, #2D5A27, #4A90A4);
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- Header -->
+    <div class="bg-white shadow-sm px-4 py-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800">财务分析</h1>
+            <div class="flex items-center space-x-2">
+                <button onclick="refreshAnalysis()" class="p-2 text-gray-600 touch-feedback">
+                    <span class="text-lg">🔄</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Tabs -->
+    <div class="px-4 py-4">
+        <div class="flex space-x-2 bg-gray-100 rounded-xl p-1">
+            <button onclick="switchTab('overview')" class="analysis-tab flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all tab-active" data-tab="overview">
+                总览
+            </button>
+            <button onclick="switchTab('trends')" class="analysis-tab flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all text-gray-600" data-tab="trends">
+                趋势
+            </button>
+            <button onclick="switchTab('expenses')" class="analysis-tab flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all text-gray-600" data-tab="expenses">
+                支出
+            </button>
+        </div>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overviewTab" class="tab-content px-4">
+        <!-- Financial Health Score -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">财务健康度</h3>
+                <div class="flex items-center justify-center mb-4">
+                    <div class="relative w-32 h-32">
+                        <svg class="w-32 h-32 progress-ring transform -rotate-90" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                            <circle cx="60" cy="60" r="50" stroke-width="8" fill="none" 
+                                    stroke-dasharray="314" stroke-dashoffset="78.5" stroke-linecap="round" id="healthScoreCircle"/>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-2xl font-bold text-green-600" id="healthScoreValue">75</span>
+                            <span class="text-xs text-gray-500" id="healthScoreLabel">健康稳健</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-2" id="healthScoreDescription">您的财务状况良好，继续保持！</p>
+                    <div class="grid grid-cols-3 gap-2 text-xs text-gray-500">
+                        <div class="text-center">
+                            <div class="w-3 h-3 bg-red-500 rounded-full mx-auto mb-1"></div>
+                            <span>需改善</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mx-auto mb-1"></div>
+                            <span>良好</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-1"></div>
+                            <span>优秀</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">关键指标</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-green-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">储蓄率</p>
+                        <p class="text-lg font-bold text-green-600" id="savingsRate">0%</p>
+                    </div>
+                    <div class="text-center p-3 bg-blue-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">支出比例</p>
+                        <p class="text-lg font-bold text-blue-600" id="expenseRatio">0%</p>
+                    </div>
+                    <div class="text-center p-3 bg-purple-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">月度结余</p>
+                        <p class="text-lg font-bold text-purple-600" id="monthlyBalance">¥0</p>
+                    </div>
+                    <div class="text-center p-3 bg-orange-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">账单数量</p>
+                        <p class="text-lg font-bold text-orange-600" id="billCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Analysis -->
+        <div class="mb-6">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 card-shadow border border-purple-200">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                        <span class="text-white text-sm">🤖</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">AI财务分析</h3>
+                </div>
+                <div id="aiAnalysisContent" class="text-sm text-gray-600">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trends Tab -->
+    <div id="trendsTab" class="tab-content px-4 hidden">
+        <!-- Period Selector -->
+        <div class="mb-4">
+            <div class="flex space-x-2 bg-gray-100 rounded-xl p-1">
+                <button onclick="changePeriod('month')" class="period-tab flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all tab-active" data-period="month">
+                    本月
+                </button>
+                <button onclick="changePeriod('year')" class="period-tab flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all text-gray-600" data-period="year">
+                    本年
+                </button>
+            </div>
+        </div>
+
+        <!-- Income/Expense Trend Chart -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">收支趋势</h3>
+                <div id="trendChart" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">月度统计</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-green-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">总收入</p>
+                        <p class="text-lg font-bold text-green-600" id="trendTotalIncome">¥0</p>
+                    </div>
+                    <div class="text-center p-3 bg-red-50 rounded-xl">
+                        <p class="text-xs text-gray-600 mb-1">总支出</p>
+                        <p class="text-lg font-bold text-red-600" id="trendTotalExpense">¥0</p>
+                    </div>
+                </div>
+                <div class="mt-4 text-center p-3 bg-blue-50 rounded-xl">
+                    <p class="text-xs text-gray-600 mb-1">总结余</p>
+                    <p class="text-lg font-bold text-blue-600" id="trendTotalBalance">¥0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Tab -->
+    <div id="expensesTab" class="tab-content px-4 hidden">
+        <!-- Expense Pie Chart -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">支出分类</h3>
+                <div id="expenseChart" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Top Expenses -->
+        <div class="mb-6">
+            <div class="bg-white rounded-2xl p-4 card-shadow">
+                <h3 class="font-semibold text-gray-800 mb-4">主要支出</h3>
+                <div id="topExpenses">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Insights -->
+        <div class="mb-6">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 card-shadow border border-blue-200">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                        <span class="text-white text-sm">💡</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">支出洞察</h3>
+                </div>
+                <div id="expenseInsights" class="text-sm text-gray-600">
+                    正在分析您的支出模式...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="grid grid-cols-5 h-16">
+            <a href="index.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🏠</span>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📝</span>
+                <span class="text-xs">账单</span>
+            </a>
+            <a href="analysis.html" class="flex flex-col items-center justify-center text-green-600">
+                <span class="text-lg mb-1">📊</span>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="savings.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🎯</span>
+                <span class="text-xs">储蓄</span>
+            </a>
+            <a href="insurance.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🛡️</span>
+                <span class="text-xs">保障</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="main.js"></script>
+    <script>
+        // 分析页面特定的JavaScript
+        let currentTab = 'overview';
+        let currentPeriod = 'month';
+        let trendChart = null;
+        let expenseChart = null;
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOverviewData();
+            loadTrendData();
+            loadExpenseData();
+        });
+
+        // 切换标签
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 更新标签样式
+            document.querySelectorAll('.analysis-tab').forEach(t => {
+                t.classList.remove('tab-active');
+                t.classList.add('text-gray-600');
+            });
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-active');
+            document.querySelector(`[data-tab="${tab}"]`).classList.remove('text-gray-600');
+            
+            // 显示对应内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tab + 'Tab').classList.remove('hidden');
+            
+            // 重新渲染图表
+            if (tab === 'trends' && trendChart) {
+                setTimeout(() => trendChart.resize(), 100);
+            } else if (tab === 'expenses' && expenseChart) {
+                setTimeout(() => expenseChart.resize(), 100);
+            }
+        }
+
+        // 切换时间周期
+        function changePeriod(period) {
+            currentPeriod = period;
+            
+            // 更新标签样式
+            document.querySelectorAll('.period-tab').forEach(t => {
+                t.classList.remove('tab-active');
+                t.classList.add('text-gray-600');
+            });
+            document.querySelector(`[data-period="${period}"]`).classList.add('tab-active');
+            document.querySelector(`[data-period="${period}"]`).classList.remove('text-gray-600');
+            
+            loadTrendData();
+        }
+
+        // 加载总览数据
+        async function loadOverviewData() {
+            try {
+                const dashboardData = await financeManager.getDashboardSummary();
+                const healthScore = dashboardData.healthScore ?? 75;
+
+                let label, description, colorClass,colorHex;
+                if (healthScore >= 80) {
+                    label = '优秀';
+                    description = '您的财务状况非常健康！';
+                    colorClass = 'text-green-600';
+                    colorHex = '#10B981';
+                } else if (healthScore >= 60) {
+                    label = '良好';
+                    description = '您的财务状况良好，继续保持！';
+                    colorClass = 'text-blue-600';
+                    colorHex = '#2563EB';
+                } else {
+                    label = '需改善';
+                    description = '建议优化您的财务管理。';
+                    colorClass = 'text-red-600';
+                    colorHex = '#DC2626';
+                }
+
+                // 更新财务健康度
+                document.getElementById('healthScoreValue').className = `text-2xl font-bold ${colorClass}`;
+                financeManager.animateScore('healthScoreValue', healthScore);
+                
+                // 更新健康度标签
+                document.getElementById('healthScoreLabel').textContent = label;
+                document.getElementById('healthScoreLabel').className = `text-xs ${colorClass}`;
+                document.getElementById('healthScoreDescription').textContent = description;
+
+                // 更新圆形进度条
+                const circle = document.getElementById('healthScoreCircle');
+                const circumference = 2 * Math.PI * 50;
+                const offset = circumference - (healthScore / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                circle.setAttribute('stroke',colorHex)
+                circle.style.strokeDashoffset = circumference;
+                anime({
+                    targets: circle,
+                    // 动画目标值：从满圆(circumference)到最终进度(finalOffset)
+                    strokeDashoffset: offset, 
+                    // 动画持续时间（毫秒）
+                    duration: 750, 
+                    // 动画缓动函数
+                    easing: 'easeInOutQuad', 
+                    // 动画开始延迟（可选，让用户先看到分数变化）
+                    delay: 100, 
+                });
+                // 更新关键指标
+                const savingsRate = dashboardData.totalIncome > 0 ? 
+                    ((dashboardData.balance / dashboardData.totalIncome) * 100).toFixed(1) : 0;
+                const expenseRatio = dashboardData.totalIncome > 0 ? 
+                    ((dashboardData.totalExpense / dashboardData.totalIncome) * 100).toFixed(1) : 0;
+                
+                document.getElementById('savingsRate').textContent = savingsRate + '%';
+                document.getElementById('expenseRatio').textContent = expenseRatio + '%';
+                financeManager.animateNumber('monthlyBalance', dashboardData.balance);
+                
+                // 获取账单数量
+                const bills = await financeManager.getBills();
+                document.getElementById('billCount').textContent = bills.length;
+                
+            } catch (error) {
+                console.error('Failed to load overview data:', error);
+            }
+        }
+
+        // 加载趋势数据
+        async function loadTrendData() {
+            try {
+                const trendData = await financeManager.getAnalysisTrends(currentPeriod);
+                
+                // 更新趋势统计
+                const totalIncome = trendData.incomeData.reduce((sum, val) => sum + val, 0);
+                const totalExpense = trendData.expenseData.reduce((sum, val) => sum + val, 0);
+                const totalBalance = totalIncome - totalExpense;
+                
+                document.getElementById('trendTotalIncome').textContent = '¥' + totalIncome.toFixed(2);
+                document.getElementById('trendTotalExpense').textContent = '¥' + totalExpense.toFixed(2);
+                document.getElementById('trendTotalBalance').textContent = '¥' + totalBalance.toFixed(2);
+                
+                // 渲染趋势图表
+                renderTrendChart(trendData);
+                
+            } catch (error) {
+                console.error('Failed to load trend data:', error);
+            }
+        }
+
+        // 渲染趋势图表
+        function renderTrendChart(data) {
+            const chartDom = document.getElementById('trendChart');
+            if (trendChart) {
+                trendChart.dispose();
+            }
+            trendChart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    }
+                },
+                legend: {
+                    data: ['收入', '支出'],
+                    bottom: 0
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.dates,
+                    axisLine: {
+                        lineStyle: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#6b7280',
+                        fontSize: 12
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#6b7280',
+                        fontSize: 12,
+                        formatter: '¥{value}'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#f3f4f6'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'line',
+                        data: data.incomeData,
+                        smooth: true,
+                        lineStyle: {
+                            color: '#10b981',
+                            width: 3
+                        },
+                        itemStyle: {
+                            color: '#10b981'
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: 'rgba(16, 185, 129, 0.3)'
+                                }, {
+                                    offset: 1, color: 'rgba(16, 185, 129, 0.05)'
+                                }]
+                            }
+                        }
+                    },
+                    {
+                        name: '支出',
+                        type: 'line',
+                        data: data.expenseData,
+                        smooth: true,
+                        lineStyle: {
+                            color: '#ef4444',
+                            width: 3
+                        },
+                        itemStyle: {
+                            color: '#ef4444'
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: 'rgba(239, 68, 68, 0.3)'
+                                }, {
+                                    offset: 1, color: 'rgba(239, 68, 68, 0.05)'
+                                }]
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            trendChart.setOption(option);
+        }
+
+        // 加载支出数据
+        async function loadExpenseData() {
+            try {
+                const expenseData = await financeManager.getAnalysisExpensePie();
+                
+                // 渲染支出饼图
+                renderExpenseChart(expenseData);
+                
+                // 显示主要支出
+                showTopExpenses(expenseData);
+                
+                // 显示支出洞察
+                generateExpenseInsights(expenseData);
+                
+            } catch (error) {
+                console.error('Failed to load expense data:', error);
+            }
+        }
+
+        // 渲染支出饼图
+        function renderExpenseChart(data) {
+            const chartDom = document.getElementById('expenseChart');
+            if (expenseChart) {
+                expenseChart.dispose();
+            }
+            expenseChart = echarts.init(chartDom);
+            
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: ¥{c} ({d}%)'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: 0,
+                    textStyle: {
+                        fontSize: 12,
+                        color: '#6b7280'
+                    }
+                },
+                series: [
+                    {
+                        name: '支出',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '45%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 8,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '16',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: data.map((item, index) => ({
+                            value: item.value,
+                            name: item.name,
+                            itemStyle: {
+                                color: colors[index % colors.length]
+                            }
+                        }))
+                    }
+                ]
+            };
+            
+            expenseChart.setOption(option);
+        }
+
+        // 显示主要支出
+        function showTopExpenses(data) {
+            const container = document.getElementById('topExpenses');
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-gray-500">
+                        <p class="text-sm">暂无支出数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+            const totalExpense = data.reduce((sum, item) => sum + item.value, 0);
+            
+            container.innerHTML = data.slice(0, 5).map((item, index) => `
+                <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 rounded-full" style="background-color: ${colors[index % colors.length]}"></div>
+                        <span class="text-sm text-gray-700">${item.name}</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-800">¥${item.value.toFixed(2)}</p>
+                        <p class="text-xs text-gray-500">${((item.value / totalExpense) * 100).toFixed(1)}%</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 生成支出洞察
+        function generateExpenseInsights(data) {
+            const container = document.getElementById('expenseInsights');
+            
+            if (data.length === 0) {
+                container.innerHTML = '暂无支出数据可供分析。';
+                return;
+            }
+            
+            const totalExpense = data.reduce((sum, item) => sum + item.value, 0);
+            const maxExpense = Math.max(...data.map(item => item.value));
+            const maxCategory = data.find(item => item.value === maxExpense);
+            
+            let insights = [];
+            
+            // 主要支出类别分析
+            if (maxCategory && (maxExpense / totalExpense) > 0.3) {
+                insights.push(`${maxCategory.name}是您的主要支出类别，占总支出的${((maxExpense / totalExpense) * 100).toFixed(1)}%。`);
+            }
+            
+            // 支出建议
+            if ((maxExpense / totalExpense) > 0.5) {
+                insights.push('建议分散支出，避免单一类别支出过高。');
+            } else if (data.length > 5) {
+                insights.push('您的支出分布较为均衡，这是良好的财务管理表现。');
+            }
+            
+            // 储蓄建议
+            const savingsRate = 100 - ((maxExpense / totalExpense) * 100);
+            if (savingsRate > 20) {
+                insights.push('您有很好的储蓄习惯，建议继续保持。');
+            } else if (savingsRate > 10) {
+                insights.push('可以考虑适当增加储蓄比例，为未来做好准备。');
+            }
+            
+            container.innerHTML = insights.join(' ') || '您的支出模式正常，继续保持良好的财务习惯。';
+        }
+
+        // 加载AI分析
+        // 修改后的 AI 分析函数
+        async function loadAIAnalysis() {
+            const container = document.getElementById('aiAnalysisContent');
+            const refreshBtn = document.querySelector('#aiAnalysisSection .refresh-btn');
+            
+            try {
+                // 显示加载状态
+                container.innerHTML = `
+                    <div class="ai-loading">
+                        <div class="loading-spinner"></div>
+                        <span>AI正在分析您的财务状况，请稍候...</span>
+                    </div>
+                `;
+                
+                // 禁用刷新按钮
+                if (refreshBtn) {
+                    refreshBtn.disabled = true;
+                }
+                
+                let analysisText = '';
+                let isFirstChunk = true;
+                
+                await financeManager.getFinancialAdviceStream((chunk) => {
+                    if (isFirstChunk) {
+                        // 第一个 chunk 清除加载状态
+                        container.innerHTML = '';
+                        isFirstChunk = false;
+                    }
+                    
+                    analysisText += chunk;
+                    
+                    // 使用 markdown 格式渲染
+                    const formattedText = formatAIText(analysisText);
+                    container.innerHTML = formattedText;
+                    
+                    // 自动滚动到底部
+                    container.scrollTop = container.scrollHeight;
+                });
+                
+                // 完成后添加完成标识
+                container.innerHTML += `
+                    <div class="ai-complete">
+                        <hr>
+                        <p class="text-muted" style="font-size: 0.9em; margin-top: 1rem;">
+                            <i class="fas fa-check-circle"></i> AI分析完成
+                        </p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('AI分析错误:', error);
+                container.innerHTML = `
+                    <div class="ai-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>AI分析功能暂时不可用，请稍后重试。</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadAIAnalysis()">
+                            重新尝试
+                        </button>
+                    </div>
+                `;
+            } finally {
+                // 重新启用刷新按钮
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                }
+            }
+        }
+
+        // 格式化 AI 文本（支持 markdown 样式）
+        function formatAIText(text) {
+            // 处理标题
+            text = text.replace(/^# (.*$)/gim, '<h4 class="ai-heading">$1</h4>');
+            text = text.replace(/^## (.*$)/gim, '<h5 class="ai-subheading">$1</h5>');
+            text = text.replace(/^### (.*$)/gim, '<h6 class="ai-subheading">$1</h6>');
+            
+            // 处理列表
+            text = text.replace(/^\d+\.\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
+            text = text.replace(/^-\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
+            
+            // 包装列表
+            text = text.replace(/(<li class="ai-list-item">.*<\/li>)/g, '<ul class="ai-list">$1</ul>');
+            
+            // 处理段落
+            const paragraphs = text.split('\n\n');
+            let formattedText = '';
+            
+            paragraphs.forEach(paragraph => {
+                if (paragraph.trim()) {
+                    if (!paragraph.startsWith('<') && !paragraph.endsWith('>')) {
+                        formattedText += `<p class="ai-paragraph">${paragraph}</p>`;
+                    } else {
+                        formattedText += paragraph;
+                    }
+                }
+            });
+            
+            return formattedText;
+        }
+
+        // 刷新分析数据
+        function refreshAnalysis() {
+            showToast('正在刷新数据...', 'info');
+            
+            loadOverviewData();
+            loadTrendData();
+            loadExpenseData();
+            loadAIAnalysis();
+        }
+
+        // 页面加载完成后加载AI分析
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延迟加载 AI 分析，让其他重要数据先加载
+            setTimeout(() => {
+                loadAIAnalysis();
+            }, 1500);
+        });
+
+        // 响应式图表
+        window.addEventListener('resize', function() {
+            if (trendChart) {
+                trendChart.resize();
+            }
+            if (expenseChart) {
+                expenseChart.resize();
+            }
+        });
+    </script>
+</body>
+</html>

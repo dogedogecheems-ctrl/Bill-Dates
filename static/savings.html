@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>储蓄目标 - 财务保障</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+        }
+        .floating-btn {
+            box-shadow: 0 8px 25px rgba(45, 90, 39, 0.3);
+        }
+        .goal-item {
+            transition: all 0.3s ease;
+        }
+        .goal-item:active {
+            transform: scale(0.98);
+        }
+        .toast-notification {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .touch-feedback {
+            transition: transform 0.1s ease;
+        }
+        .touch-feedback:active {
+            transform: scale(0.98);
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- Header -->
+    <div class="bg-white shadow-sm px-4 py-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800">储蓄目标</h1>
+            <div class="flex items-center space-x-2">
+                <button onclick="showStatsModal()" class="p-2 text-gray-600 touch-feedback">
+                    <span class="text-lg">📊</span>
+                </button>
+                <button onclick="showAddGoalModal()" class="p-2 text-gray-600 touch-feedback">
+                    <span class="text-lg">➕</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Stats -->
+    <div class="px-4 py-4">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">总储蓄</p>
+                    <p class="text-xl font-bold text-green-600" id="totalSavings">¥0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">本月储蓄</p>
+                    <p class="text-xl font-bold text-blue-600" id="monthlySavings">¥0</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">进行中</p>
+                    <p class="text-lg font-semibold text-orange-600" id="activeGoals">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 mb-1">已完成</p>
+                    <p class="text-lg font-semibold text-green-600" id="completedGoals">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals List -->
+    <div class="px-4">
+        <div id="goalsList" class="space-y-4">
+            <div class="flex items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden px-4 py-12">
+        <div class="text-center">
+            <div class="text-6xl mb-4">🎯</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">还没有储蓄目标</h3>
+            <p class="text-sm text-gray-500 mb-6">创建您的第一个储蓄目标</p>
+            <button onclick="showAddGoalModal()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-medium touch-feedback">
+                创建目标
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button onclick="showAddGoalModal()" class="fixed bottom-20 right-4 w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full flex items-center justify-center text-2xl floating-btn z-30 touch-feedback">
+        +
+    </button>
+
+    <!-- Add/Edit Goal Modal -->
+    <div id="addGoalModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="goalModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold" id="goalModalTitle">创建储蓄目标</h3>
+                    <button onclick="hideAddGoalModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <form id="goalForm" class="space-y-4">
+                    <input type="hidden" id="goalId">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">目标名称</label>
+                        <input type="text" id="goalName" placeholder="例如：买车基金" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">目标类型</label>
+                        <select id="goalType" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="emergency">应急基金</option>
+                            <option value="vacation">旅游基金</option>
+                            <option value="house">购房基金</option>
+                            <option value="car">购车基金</option>
+                            <option value="education">教育基金</option>
+                            <option value="retirement">退休基金</option>
+                            <option value="investment">投资本金</option>
+                            <option value="other">其他目标</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">目标金额</label>
+                        <input type="number" id="goalTargetAmount" placeholder="0.00" step="0.01" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">当前金额</label>
+                        <input type="number" id="goalCurrentAmount" placeholder="0.00" step="0.01" value="0" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">目标日期（可选）</label>
+                        <input type="date" id="goalTargetDate" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <button type="submit" id="submitGoalBtn" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-xl font-medium touch-feedback">
+                        创建目标
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goal Detail Modal -->
+    <div id="goalDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="detailModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">目标详情</h3>
+                    <button onclick="hideGoalDetailModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <div id="goalDetailContent">
+                    <!-- Goal details will be loaded here -->
+                </div>
+                
+                <div class="space-y-3 mt-6">
+                    <button onclick="addSavingsToGoal()" class="w-full bg-green-500 text-white p-3 rounded-xl font-medium touch-feedback">
+                        添加储蓄
+                    </button>
+                    <div class="flex space-x-3">
+                        <button onclick="editGoal()" class="flex-1 bg-blue-500 text-white p-3 rounded-xl font-medium touch-feedback">
+                            编辑
+                        </button>
+                        <button onclick="deleteGoal()" class="flex-1 bg-red-500 text-white p-3 rounded-xl font-medium touch-feedback">
+                            删除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Savings Modal -->
+    <div id="addSavingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="savingsModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">添加储蓄</h3>
+                    <button onclick="hideAddSavingsModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <form id="savingsForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">添加金额</label>
+                        <input type="number" id="savingsAmount" placeholder="0.00" step="0.01" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-xl font-medium touch-feedback">
+                        确认添加
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="statsModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">储蓄统计</h3>
+                    <button onclick="hideStatsModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <div id="statsContent">
+                    <!-- Stats will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="grid grid-cols-5 h-16">
+            <a href="index.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🏠</span>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📝</span>
+                <span class="text-xs">账单</span>
+            </a>
+            <a href="analysis.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📊</span>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="savings.html" class="flex flex-col items-center justify-center text-green-600">
+                <span class="text-lg mb-1">🎯</span>
+                <span class="text-xs">储蓄</span>
+            </a>
+            <a href="insurance.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🛡️</span>
+                <span class="text-xs">保障</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="main.js"></script>
+    <script>
+        // 储蓄页面特定的JavaScript
+        let selectedGoalId = null;
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavingsStats();
+            loadSavingsGoals();
+        });
+
+        // 加载储蓄统计
+        async function loadSavingsStats() {
+            try {
+                const stats = await financeManager.getSavingsStats();
+                
+                financeManager.animateNumber('totalSavings', stats.totalSavings);
+                financeManager.animateNumber('monthlySavings', stats.monthlySavings);
+                document.getElementById('activeGoals').textContent = stats.activeGoals;
+                document.getElementById('completedGoals').textContent = stats.completedGoals;
+            } catch (error) {
+                console.error('Failed to load savings stats:', error);
+            }
+        }
+
+        // 加载储蓄目标
+        async function loadSavingsGoals() {
+            const goalsList = document.getElementById('goalsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            goalsList.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+            `;
+            
+            try {
+                const goals = await financeManager.getSavingsGoals();
+                
+                if (goals.length === 0) {
+                    goalsList.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                
+                goalsList.innerHTML = goals.map(goal => `
+                    <div class="goal-item bg-white rounded-2xl p-4 card-shadow" onclick="showGoalDetail(${goal.id})">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-gray-800">${goal.name}</h3>
+                            <span class="text-xs px-2 py-1 rounded-full ${
+                                goal.type === 'emergency' ? 'bg-red-100 text-red-600' :
+                                goal.type === 'vacation' ? 'bg-blue-100 text-blue-600' :
+                                goal.type === 'house' ? 'bg-green-100 text-green-600' :
+                                goal.type === 'car' ? 'bg-purple-100 text-purple-600' :
+                                goal.type === 'education' ? 'bg-yellow-100 text-yellow-600' :
+                                goal.type === 'retirement' ? 'bg-indigo-100 text-indigo-600' :
+                                'bg-gray-100 text-gray-600'
+                            }">
+                                ${getSavingsGoalTypeName(goal.type)}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                <span>¥${goal.currentAmount.toFixed(2)}</span>
+                                <span>¥${goal.targetAmount.toFixed(2)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500" 
+                                     style="width: ${Math.min(goal.progress, 100)}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-600">
+                                <span class="font-medium">${goal.progress.toFixed(1)}%</span> 已完成
+                                ${goal.targetDate ? `<span class="ml-2">截止：${new Date(goal.targetDate).toLocaleDateString()}</span>` : ''}
+                            </div>
+                            <div class="w-12 h-12 relative">
+                                <svg class="w-12 h-12 progress-ring" viewBox="0 0 42 42">
+                                    <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e5e7eb" stroke-width="3"/>
+                                    <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10B981" stroke-width="3" 
+                                            stroke-dasharray="${goal.progress} ${100 - goal.progress}" stroke-dashoffset="25"/>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xs font-bold text-green-600">${Math.round(goal.progress)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // 添加进入动画
+                anime({
+                    targets: '.goal-item',
+                    translateY: [20, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(100),
+                    duration: 500,
+                    easing: 'easeOutQuart'
+                });
+            } catch (error) {
+                console.error('Failed to load savings goals:', error);
+                goalsList.innerHTML = `<div class="text-center text-red-500 py-4">加载储蓄目标失败</div>`;
+            }
+        }
+
+        // 显示目标详情
+        function showGoalDetail(goalId) {
+            const goal = financeManager.savingsGoals.find(g => g.id === goalId);
+            if (!goal) return;
+            
+            selectedGoalId = goalId;
+            
+            const modal = document.getElementById('goalDetailModal');
+            const content = document.getElementById('detailModalContent');
+            const detailContent = document.getElementById('goalDetailContent');
+            
+            const remaining = Math.max(0, goal.targetAmount - goal.currentAmount);
+            const daysLeft = goal.targetDate ? Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+            
+            detailContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-center mb-4">
+                        <div class="w-20 h-20 mx-auto mb-3 relative">
+                            <svg class="w-20 h-20 progress-ring" viewBox="0 0 42 42">
+                                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e5e7eb" stroke-width="3"/>
+                                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10B981" stroke-width="3" 
+                                        stroke-dasharray="${goal.progress} ${100 - goal.progress}" stroke-dashoffset="25"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold text-green-600">${Math.round(goal.progress)}%</span>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">${goal.name}</h3>
+                        <span class="text-sm px-3 py-1 rounded-full ${
+                            goal.type === 'emergency' ? 'bg-red-100 text-red-600' :
+                            goal.type === 'vacation' ? 'bg-blue-100 text-blue-600' :
+                            goal.type === 'house' ? 'bg-green-100 text-green-600' :
+                            goal.type === 'car' ? 'bg-purple-100 text-purple-600' :
+                            goal.type === 'education' ? 'bg-yellow-100 text-yellow-600' :
+                            goal.type === 'retirement' ? 'bg-indigo-100 text-indigo-600' :
+                            'bg-gray-100 text-gray-600'
+                        }">
+                            ${getSavingsGoalTypeName(goal.type)}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">当前金额</span>
+                            <span class="font-medium text-green-600">¥${goal.currentAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">目标金额</span>
+                            <span class="font-medium">¥${goal.targetAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">剩余金额</span>
+                            <span class="font-medium ${remaining > 0 ? 'text-orange-600' : 'text-green-600'}">
+                                ¥${remaining.toFixed(2)}
+                            </span>
+                        </div>
+                        ${goal.targetDate ? `
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-600">目标日期</span>
+                                <span class="font-medium">${new Date(goal.targetDate).toLocaleDateString()}</span>
+                            </div>
+                            ${daysLeft !== null ? `
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-600">剩余天数</span>
+                                    <span class="font-medium ${daysLeft > 0 ? 'text-blue-600' : 'text-red-600'}">
+                                        ${daysLeft > 0 ? daysLeft + '天' : '已过期'}
+                                    </span>
+                                </div>
+                            ` : ''}
+                        ` : ''}
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-600">完成进度</span>
+                            <span class="font-medium text-blue-600">${goal.progress.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        // 隐藏目标详情模态框
+        function hideGoalDetailModal() {
+            const modal = document.getElementById('goalDetailModal');
+            const content = document.getElementById('detailModalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 添加储蓄到目标
+        function addSavingsToGoal() {
+            hideGoalDetailModal();
+            showAddSavingsModal();
+        }
+
+        // 显示添加储蓄模态框
+        function showAddSavingsModal() {
+            const modal = document.getElementById('addSavingsModal');
+            const content = document.getElementById('savingsModalContent');
+            
+            document.getElementById('savingsAmount').value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        }
+
+        // 隐藏添加储蓄模态框
+        function hideAddSavingsModal() {
+            const modal = document.getElementById('addSavingsModal');
+            const content = document.getElementById('savingsModalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // 编辑目标
+        function editGoal() {
+            const goal = financeManager.savingsGoals.find(g => g.id === selectedGoalId);
+            if (!goal) return;
+            
+            hideGoalDetailModal();
+            
+            // 填充表单
+            document.getElementById('goalModalTitle').textContent = '编辑储蓄目标';
+            document.getElementById('submitGoalBtn').textContent = '更新目标';
+            document.getElementById('goalId').value = goal.id;
+            document.getElementById('goalName').value = goal.name;
+            document.getElementById('goalType').value = goal.type;
+            document.getElementById('goalTargetAmount').value = goal.targetAmount;
+            document.getElementById('goalCurrentAmount').value = goal.currentAmount;
+            document.getElementById('goalTargetDate').value = goal.targetDate || '';
+            
+            showAddGoalModal();
+        }
+
+        // 删除目标
+        async function deleteGoal() {
+            if (!selectedGoalId) return;
+            
+            if (confirm('确定要删除这个储蓄目标吗？')) {
+                try {
+                    await financeManager.deleteSavingsGoal(selectedGoalId);
+                    hideGoalDetailModal();
+                    showToast('储蓄目标已删除', 'success');
+                    
+                    // 刷新数据
+                    loadSavingsStats();
+                    loadSavingsGoals();
+                } catch (error) {
+                    showToast('删除失败: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // 模态框控制
+        function showAddGoalModal() {
+            const modal = document.getElementById('addGoalModal');
+            const content = document.getElementById('goalModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        }
+
+        function hideAddGoalModal() {
+            const modal = document.getElementById('addGoalModal');
+            const content = document.getElementById('goalModalContent');
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // 显示统计模态框
+        function showStatsModal() {
+            const modal = document.getElementById('statsModal');
+            const content = document.getElementById('statsModalContent');
+            const statsContent = document.getElementById('statsContent');
+            
+            // 显示基本统计信息
+            statsContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-center mb-4">
+                        <div class="text-4xl mb-2">📊</div>
+                        <h3 class="text-lg font-semibold text-gray-800">储蓄统计</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-3 bg-green-50 rounded-xl">
+                            <p class="text-xs text-gray-600 mb-1">总储蓄</p>
+                            <p class="text-lg font-bold text-green-600" id="modalTotalSavings">¥0</p>
+                        </div>
+                        <div class="text-center p-3 bg-blue-50 rounded-xl">
+                            <p class="text-xs text-gray-600 mb-1">本月储蓄</p>
+                            <p class="text-lg font-bold text-blue-600" id="modalMonthlySavings">¥0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">进行中目标</span>
+                            <span class="font-medium text-orange-600" id="modalActiveGoals">0</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">已完成目标</span>
+                            <span class="font-medium text-green-600" id="modalCompletedGoals">0</span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-600">目标总数</span>
+                            <span class="font-medium text-blue-600" id="modalTotalGoals">0</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 更新统计数值
+            const stats = financeManager.savingsStats || {};
+            document.getElementById('modalTotalSavings').textContent = financeManager.formatCurrency(stats.totalSavings || 0);
+            document.getElementById('modalMonthlySavings').textContent = financeManager.formatCurrency(stats.monthlySavings || 0);
+            document.getElementById('modalActiveGoals').textContent = stats.activeGoals || 0;
+            document.getElementById('modalCompletedGoals').textContent = stats.completedGoals || 0;
+            document.getElementById('modalTotalGoals').textContent = (stats.activeGoals || 0) + (stats.completedGoals || 0);
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        }
+
+        function hideStatsModal() {
+            const modal = document.getElementById('statsModal');
+            const content = document.getElementById('statsModalContent');
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // 表单提交处理
+        document.getElementById('goalForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const goalId = document.getElementById('goalId').value;
+            const goal = {
+                name: document.getElementById('goalName').value,
+                type: document.getElementById('goalType').value,
+                targetAmount: parseFloat(document.getElementById('goalTargetAmount').value),
+                currentAmount: parseFloat(document.getElementById('goalCurrentAmount').value),
+                targetDate: document.getElementById('goalTargetDate').value || null
+            };
+
+            if (!goal.name || !goal.targetAmount) {
+                showToast('目标名称和目标金额不能为空', 'error');
+                return;
+            }
+
+            if (goal.currentAmount > goal.targetAmount) {
+                showToast('当前金额不能超过目标金额', 'error');
+                return;
+            }
+
+            try {
+                if (goalId) {
+                    // 更新目标
+                    // 注意：这里需要实现更新目标的API
+                    showToast('目标更新功能开发中', 'info');
+                } else {
+                    // 创建目标
+                    await financeManager.addSavingsGoal(goal);
+                    showToast('储蓄目标创建成功！', 'success');
+                }
+                
+                hideAddGoalModal();
+                
+                // 刷新数据
+                loadSavingsStats();
+                loadSavingsGoals();
+                
+                // 重置表单
+                document.getElementById('goalForm').reset();
+                
+            } catch (error) {
+                showToast('操作失败: ' + error.message, 'error');
+            }
+        });
+
+        // 添加储蓄表单提交
+        document.getElementById('savingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('savingsAmount').value);
+            
+            if (!amount || amount <= 0) {
+                showToast('请输入有效的金额', 'error');
+                return;
+            }
+
+            try {
+                await financeManager.updateSavingsGoal(selectedGoalId, amount);
+                showToast('储蓄添加成功！', 'success');
+                hideAddSavingsModal();
+                
+                // 刷新数据
+                loadSavingsStats();
+                loadSavingsGoals();
+                
+                // 重置表单
+                document.getElementById('savingsForm').reset();
+                
+            } catch (error) {
+                showToast('操作失败: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

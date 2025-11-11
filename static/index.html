@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务保障 - 您的个人财务管家</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+        }
+        .hero-title {
+            font-family: 'Noto Serif SC', serif;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #2D5A27, #4A90A4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .floating-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+            to { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
+        }
+        .toast-notification {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .touch-feedback {
+            transition: transform 0.1s ease;
+        }
+        .touch-feedback:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 px-4 pt-8 pb-6">
+        <div class="absolute top-0 right-0 w-32 h-32 opacity-10">
+            <div class="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 rounded-full floating-animation flex items-center justify-center">
+                <span class="text-4xl">💰</span>
+            </div>
+        </div>
+        
+        <div class="relative z-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="hero-title text-2xl font-bold gradient-text">财务保障</h1>
+                    <p class="text-sm text-gray-600 mt-1">您的个人财务管家</p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-lg">💎</span>
+                </div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 card-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm text-gray-600">本月财务状况</span>
+                    <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full" id="financialStatus">健康稳健</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500">总收入</p>
+                        <p class="text-lg font-bold text-green-600" id="totalIncome">¥0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">总支出</p>
+                        <p class="text-lg font-bold text-red-500" id="totalExpense">¥0</p>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                    <p class="text-xs text-gray-500">结余</p>
+                    <p class="text-xl font-bold text-blue-600" id="balance">¥0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="px-4 mb-6">
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="showAddBillModal()" class="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl card-shadow pulse-glow touch-feedback">
+                <div class="text-2xl mb-2">📝</div>
+                <div class="text-sm font-medium">记录账单</div>
+            </button>
+            <button onclick="window.location.href='savings.html'" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl card-shadow touch-feedback">
+                <div class="text-2xl mb-2">🎯</div>
+                <div class="text-sm font-medium">储蓄目标</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Financial Health Score -->
+    <div class="px-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">财务健康度</h3>
+                <button onclick="window.location.href='analysis.html'" class="text-xs text-blue-500">查看详情</button>
+            </div>
+            <div class="flex items-center justify-center mb-4">
+                <div class="relative w-24 h-24">
+                    <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                        <circle cx="50" cy="50" r="40" stroke="#4ade80" stroke-width="8" fill="none" 
+                                stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round" id="healthScoreCircle"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-lg font-bold" id="healthScore">75</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <p class="text-sm text-gray-600" id="profileType">健康稳健型</p>
+                <p class="text-xs text-gray-500 mt-1">您的财务状况良好，继续保持！</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Bills -->
+    <div class="px-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">最近账单</h3>
+                <button onclick="window.location.href='bills.html'" class="text-xs text-blue-500">查看全部</button>
+            </div>
+            <div id="recentBills" class="space-y-3">
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Goals Preview -->
+    <div class="px-4 mb-6">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">储蓄目标</h3>
+                <button onclick="window.location.href='savings.html'" class="text-xs text-blue-500">管理目标</button>
+            </div>
+            <div id="savingsGoals" class="space-y-3">
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Tips -->
+    <div class="px-4 mb-6">
+        <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-4 card-shadow border border-yellow-200">
+            <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span class="text-white text-sm">💡</span>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-1">财务小贴士</h4>
+                    <p class="text-sm text-gray-600" id="financialTip">建议将收入的20%用于储蓄和投资，建立应急基金，为未来做好准备。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Advice Section -->
+    <div class="px-4 mb-6">
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 card-shadow border border-purple-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">💡 AI理财建议</h3>
+                <button onclick="getAIAdvice()" class="text-xs bg-purple-500 text-white px-3 py-1 rounded-full" id="aiAdviceBtn">获取建议</button>
+            </div>
+            <div id="aiAdviceContent" class="text-sm text-gray-600">
+                点击获取按钮，让AI为您提供个性化的理财建议。
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Bill Modal -->
+    <div id="addBillModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="modalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">添加账单</h3>
+                    <button onclick="hideAddBillModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <form id="billForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
+                        <select id="billType" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="income">收入</option>
+                            <option value="expense">支出</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">金额</label>
+                        <input type="number" id="billAmount" placeholder="0.00" step="0.01" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                        <select id="billCategory" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                        <input type="date" id="billDate" 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                        <input type="text" id="billNote" placeholder="添加备注..." 
+                               class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-xl font-medium touch-feedback">
+                        添加账单
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="grid grid-cols-5 h-16">
+            <a href="index.html" class="flex flex-col items-center justify-center text-green-600">
+                <span class="text-lg mb-1">🏠</span>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📝</span>
+                <span class="text-xs">账单</span>
+            </a>
+            <a href="analysis.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📊</span>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="savings.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🎯</span>
+                <span class="text-xs">储蓄</span>
+            </a>
+            <a href="insurance.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🛡️</span>
+                <span class="text-xs">保障</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="main.js"></script>
+    <script>
+        // 首页特定的JavaScript
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            loadRecentBills();
+            loadSavingsGoals();
+            
+            // 设置今天的日期
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('billDate').value = today;
+            
+            // 初始化分类选项
+            updateCategoryOptions('expense');
+        });
+
+        // 加载仪表盘数据
+        async function loadDashboardData() {
+            try {
+                const data = await financeManager.getDashboardSummary();
+                
+                financeManager.animateNumber('totalIncome', data.totalIncome);
+                financeManager.animateNumber('totalExpense', data.totalExpense);
+                financeManager.animateNumber('balance', data.balance);
+                const healthScore = data.healthScore ?? 75;
+                
+                // 更新财务状态
+                let colorHex,colorClass;
+                if (healthScore >= 80) {
+                    document.getElementById('financialStatus').textContent = '优秀';
+                    document.getElementById('financialStatus').className = 'text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full';
+                    colorClass = 'text-green-600';
+                    colorHex = '#10B981';
+                } else if (healthScore >= 60) {
+                    document.getElementById('financialStatus').textContent = '良好';
+                    document.getElementById('financialStatus').className = 'text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full';
+                    colorClass = 'text-blue-600';
+                    colorHex = '#2563EB';
+                } else {
+                    document.getElementById('financialStatus').textContent = '需改善';
+                    document.getElementById('financialStatus').className = 'text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full';
+                    colorClass = 'text-red-600';
+                    colorHex = '#DC2626';
+                }
+
+                // 更新财务健康度
+                document.getElementById('healthScore').className = `font-bold ${colorClass}`;
+                financeManager.animateScore('healthScore', healthScore);
+
+                // 更新圆形进度条
+                const circle = document.getElementById('healthScoreCircle');
+                const circumference = 2 * Math.PI * 40;
+                const offset = circumference - (healthScore / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                circle.setAttribute('stroke',colorHex)
+                circle.style.strokeDashoffset = circumference;
+                anime({
+                    targets: circle,
+                    // 动画目标值：从满圆(circumference)到最终进度(finalOffset)
+                    strokeDashoffset: offset, 
+                    // 动画持续时间（毫秒）
+                    duration: 750, 
+                    // 动画缓动函数
+                    easing: 'easeInOutQuad', 
+                    // 动画开始延迟（可选，让用户先看到分数变化）
+                    delay: 100, 
+                });
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                showToast('加载数据失败', 'error');
+            }
+        }
+
+        // 加载最近账单
+        async function loadRecentBills() {
+            try {
+                const bills = await financeManager.getBills({ limit: 5 });
+                const container = document.getElementById('recentBills');
+                
+                if (bills.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-gray-500">
+                            <div class="text-4xl mb-2">📝</div>
+                            <p class="text-sm">还没有账单记录</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = bills.map(bill => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${
+                                bill.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                            }">
+                                ${bill.type === 'income' ? '📈' : '📉'}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800 text-sm">${financeManager.getCategoryName(bill.category)}</p>
+                                <p class="text-xs text-gray-500">${bill.date}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold ${bill.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                                ${bill.type === 'income' ? '+' : '-'}¥${parseFloat(bill.amount).toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Failed to load recent bills:', error);
+                document.getElementById('recentBills').innerHTML = `
+                    <div class="text-center py-4 text-red-500">
+                        <p class="text-sm">加载账单失败</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 加载储蓄目标
+        async function loadSavingsGoals() {
+            try {
+                const goals = await financeManager.getSavingsGoals({ limit: 3 });
+                const container = document.getElementById('savingsGoals');
+                
+                if (goals.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-gray-500">
+                            <div class="text-4xl mb-2">🎯</div>
+                            <p class="text-sm">还没有储蓄目标</p>
+                            <button onclick="window.location.href='savings.html'" class="text-blue-500 text-xs mt-2">创建目标</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = goals.map(goal => `
+                    <div class="p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-gray-800 text-sm">${goal.name}</h4>
+                            <span class="text-xs text-gray-500">${getSavingsGoalTypeName(goal.type)}</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between text-xs text-gray-600 mb-1">
+                                <span>¥${goal.currentAmount.toFixed(2)}</span>
+                                <span>¥${goal.targetAmount.toFixed(2)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: ${Math.min(goal.progress, 100)}%"></div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            已完成 ${goal.progress.toFixed(1)}%
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Failed to load savings goals:', error);
+                document.getElementById('savingsGoals').innerHTML = `
+                    <div class="text-center py-4 text-red-500">
+                        <p class="text-sm">加载储蓄目标失败</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 获取AI建议
+        async function getAIAdvice() {
+            const btn = document.getElementById('aiAdviceBtn');
+            const content = document.getElementById('aiAdviceContent');
+            
+            btn.textContent = '获取中...';
+            btn.disabled = true;
+            content.innerHTML = '<div class="flex items-center justify-center py-4"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div></div>';
+            
+            try {
+                let adviceText = '';
+                let isFirstChunk = true;
+                
+                await financeManager.getFinancialAdviceStream((chunk) => {
+                    if (isFirstChunk) {
+                        // 第一个 chunk 清除加载状态
+                        content.innerHTML = '';
+                        isFirstChunk = false;
+                    }
+                    
+                    adviceText += chunk;
+                    
+                    // 使用 markdown 格式渲染
+                    const formattedText = formatAIText(adviceText);
+                    content.innerHTML = formattedText;
+                    
+                    // 自动滚动到底部
+                    content.scrollTop = content.scrollHeight;
+                });
+                
+                // 完成后添加完成标识
+                content.innerHTML += `
+                    <div class="ai-complete">
+                        <hr>
+                        <p class="text-muted" style="font-size: 0.9em; margin-top: 1rem;">
+                            <i class="fas fa-check-circle"></i> AI建议生成完成
+                        </p>
+                    </div>
+                `;
+                
+                btn.textContent = '重新获取';
+                btn.disabled = false;
+            } catch (error) {
+                console.error('Failed to get AI advice:', error);
+                content.innerHTML = `
+                    <div class="ai-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>获取建议失败，请稍后重试。</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="getAIAdvice()">
+                            重新尝试
+                        </button>
+                    </div>
+                `;
+                btn.textContent = '获取建议';
+                btn.disabled = false;
+            }
+        }
+
+        // 格式化 AI 文本（支持 markdown 样式）
+        function formatAIText(text) {
+            // 处理标题
+            text = text.replace(/^# (.*$)/gim, '<h4 class="ai-heading">$1</h4>');
+            text = text.replace(/^## (.*$)/gim, '<h5 class="ai-subheading">$1</h5>');
+            text = text.replace(/^### (.*$)/gim, '<h6 class="ai-subheading">$1</h6>');
+            
+            // 处理列表
+            text = text.replace(/^\d+\.\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
+            text = text.replace(/^-\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
+            
+            // 包装列表
+            text = text.replace(/(<li class="ai-list-item">.*<\/li>)/g, '<ul class="ai-list">$1</ul>');
+            
+            // 处理段落
+            const paragraphs = text.split('\n\n');
+            let formattedText = '';
+            
+            paragraphs.forEach(paragraph => {
+                if (paragraph.trim()) {
+                    if (!paragraph.startsWith('<') && !paragraph.endsWith('>')) {
+                        formattedText += `<p class="ai-paragraph">${paragraph}</p>`;
+                    } else {
+                        formattedText += paragraph;
+                    }
+                }
+            });
+            
+            return formattedText;
+        }
+        
+
+        // 模态框控制
+        function showAddBillModal() {
+            document.getElementById('addBillModal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('modalContent').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function hideAddBillModal() {
+            const modal = document.getElementById('addBillModal');
+            const content = document.getElementById('modalContent');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 表单提交处理
+        document.getElementById('billForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const bill = {
+                type: document.getElementById('billType').value,
+                amount: parseFloat(document.getElementById('billAmount').value),
+                category: document.getElementById('billCategory').value,
+                date: document.getElementById('billDate').value,
+                note: document.getElementById('billNote').value
+            };
+
+            if (!bill.amount || !bill.date) {
+                showToast('金额和日期不能为空', 'error');
+                return;
+            }
+
+            try {
+                await financeManager.addBill(bill);
+                showToast('账单添加成功！', 'success');
+                hideAddBillModal();
+                
+                // 刷新数据
+                loadDashboardData();
+                loadRecentBills();
+                
+                // 重置表单
+                document.getElementById('billForm').reset();
+                document.getElementById('billDate').value = new Date().toISOString().split('T')[0];
+                updateCategoryOptions('expense');
+                
+            } catch (error) {
+                showToast('添加失败: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

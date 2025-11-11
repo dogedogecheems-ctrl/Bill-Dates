@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务保障 - 财务保障</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+        }
+        .toast-notification {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .touch-feedback {
+            transition: transform 0.1s ease;
+        }
+        .touch-feedback:active {
+            transform: scale(0.98);
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:active {
+            transform: scale(0.98);
+        }
+        .risk-low { border-left: 4px solid #10B981; }
+        .risk-medium { border-left: 4px solid #F59E0B; }
+        .risk-high { border-left: 4px solid #EF4444; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- Header -->
+    <div class="bg-white shadow-sm px-4 py-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-800">财务保障</h1>
+            <div class="flex items-center space-x-2">
+                <button onclick="showRiskAssessment()" class="p-2 text-gray-600 touch-feedback">
+                    <span class="text-lg">📋</span>
+                </button>
+                <button onclick="refreshProducts()" class="p-2 text-gray-600 touch-feedback">
+                    <span class="text-lg">🔄</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Profile Summary -->
+    <div class="px-4 py-4">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-800">风险画像</h3>
+                <button onclick="showRiskAssessment()" class="text-xs text-blue-500">重新评估</button>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                        <div class="w-4 h-4 rounded-full mr-2" id="riskLevelColor" style="background-color: #10B981;"></div>
+                        <span class="font-medium" id="riskLevelText">平衡型</span>
+                    </div>
+                    <p class="text-xs text-gray-600" id="riskLevelDescription">适合中等风险的投资产品</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-500">风险评分</p>
+                    <p class="text-lg font-bold" id="riskScore">75</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Categories -->
+    <div class="px-4 mb-4">
+        <div class="flex space-x-2 overflow-x-auto pb-2">
+            <button onclick="filterProducts('all')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-green-500 text-white" data-category="all">
+                全部
+            </button>
+            <button onclick="filterProducts('fund')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="fund">
+                基金
+            </button>
+            <button onclick="filterProducts('insurance')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="insurance">
+                保险
+            </button>
+            <button onclick="filterProducts('deposit')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="deposit">
+                存款
+            </button>
+            <button onclick="filterProducts('bond')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="bond">
+                债券
+            </button>
+            <button onclick="filterProducts('stock')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="stock">
+                股票
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="px-4 mb-4">
+        <div class="relative">
+            <input type="text" id="productSearch" placeholder="搜索理财产品..." 
+                   class="w-full p-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <span class="text-gray-400">🔍</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="px-4">
+        <div id="productsList" class="space-y-4">
+            <div class="flex items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden px-4 py-12">
+        <div class="text-center">
+            <div class="text-6xl mb-4">💰</div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">暂无理财产品</h3>
+            <p class="text-sm text-gray-500 mb-6">请检查网络连接或稍后再试</p>
+            <button onclick="refreshProducts()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-medium touch-feedback">
+                重新加载
+            </button>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="detailModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold" id="productDetailTitle">产品详情</h3>
+                    <button onclick="hideProductDetailModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <div id="productDetailContent">
+                    <!-- Product details will be loaded here -->
+                </div>
+                
+                <div class="mt-6">
+                    <button onclick="hideProductDetailModal()" class="w-full bg-gray-200 text-gray-700 p-3 rounded-xl font-medium touch-feedback">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Assessment Modal -->
+    <div id="riskAssessmentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="assessmentModalContent">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">风险评估问卷</h3>
+                    <button onclick="hideRiskAssessmentModal()" class="text-gray-400 text-xl touch-feedback">×</button>
+                </div>
+                
+                <div id="questionnaireContent">
+                    <!-- Questionnaire will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="grid grid-cols-5 h-16">
+            <a href="index.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🏠</span>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📝</span>
+                <span class="text-xs">账单</span>
+            </a>
+            <a href="analysis.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">📊</span>
+                <span class="text-xs">分析</span>
+            </a>
+            <a href="savings.html" class="flex flex-col items-center justify-center text-gray-400">
+                <span class="text-lg mb-1">🎯</span>
+                <span class="text-xs">储蓄</span>
+            </a>
+            <a href="insurance.html" class="flex flex-col items-center justify-center text-green-600">
+                <span class="text-lg mb-1">🛡️</span>
+                <span class="text-xs">保障</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="main.js"></script>
+    <script>
+        // 保障页面特定的JavaScript
+        let currentCategory = 'all';
+        let currentPage = 1;
+        let isLoading = false;
+        let riskProfile = null;
+        let questionnaires = [];
+        let currentQuestionnaire = null;
+        let currentQuestionIndex = 0;
+        let questionnaireAnswers = {};
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRiskProfile();
+            loadFinancialProducts();
+            loadQuestionnaires();
+            setupSearch();
+        });
+
+        // 加载风险画像
+        async function loadRiskProfile() {
+            try {
+                riskProfile = await financeManager.getRiskProfile();
+                updateRiskProfileDisplay();
+            } catch (error) {
+                console.error('Failed to load risk profile:', error);
+                // 使用默认风险画像
+                riskProfile = {
+                    score: 75,
+                    riskLevel: 'balanced',
+                    answers: {}
+                };
+                updateRiskProfileDisplay();
+            }
+        }
+
+        // 更新风险画像显示
+        function updateRiskProfileDisplay() {
+            if (!riskProfile) return;
+            
+            const riskLevels = {
+                'conservative': { name: '保守型', color: '#10B981', description: '适合低风险的理财产品' },
+                'balanced': { name: '平衡型', color: '#F59E0B', description: '适合中等风险的投资产品' },
+                'aggressive': { name: '积极型', color: '#EF4444', description: '适合高风险的投资产品' }
+            };
+            
+            const level = riskLevels[riskProfile.riskLevel] || riskLevels['balanced'];
+            
+            document.getElementById('riskLevelColor').style.backgroundColor = level.color;
+            document.getElementById('riskLevelText').textContent = level.name;
+            document.getElementById('riskLevelDescription').textContent = level.description;
+            document.getElementById('riskScore').textContent = riskProfile.score || 75;
+        }
+
+        // 加载理财产品
+        async function loadFinancialProducts() {
+            const productsList = document.getElementById('productsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (currentPage === 1) {
+                productsList.innerHTML = `
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                `;
+            }
+            
+            try {
+                let products = [];
+                
+                if (currentCategory === 'all') {
+                    products = await financeManager.getFinancialProducts();
+                } else {
+                    products = await financeManager.searchFinancialProducts('', currentCategory);
+                }
+                
+                if (products.length === 0 && currentPage === 1) {
+                    productsList.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                
+                emptyState.classList.add('hidden');
+                
+                if (currentPage === 1) {
+                    productsList.innerHTML = '';
+                }
+                
+                const productHTML = products.map(product => createProductHTML(product)).join('');
+                
+                if (currentPage === 1) {
+                    productsList.innerHTML = productHTML;
+                } else {
+                    productsList.insertAdjacentHTML('beforeend', productHTML);
+                }
+                
+                // 添加进入动画
+                anime({
+                    targets: '.product-card',
+                    translateY: [20, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(100),
+                    duration: 500,
+                    easing: 'easeOutQuart'
+                });
+                
+            } catch (error) {
+                console.error('Failed to load financial products:', error);
+                if (currentPage === 1) {
+                    productsList.innerHTML = `<div class="text-center text-red-500 py-4">加载产品失败</div>`;
+                }
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // 创建产品HTML
+        function createProductHTML(product) {
+            const riskClass = `risk-${product.riskLevel}`;
+            const riskColor = financeManager.getRiskLevelColor(product.riskLevel);
+            const typeIcon = financeManager.getProductTypeIcon(product.productType);
+            
+            return `
+                <div class="product-card bg-white rounded-2xl p-4 card-shadow ${riskClass}" onclick="showProductDetail(${product.id})">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center text-2xl">
+                                ${typeIcon}
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800 text-sm">${product.name}</h3>
+                                <p class="text-xs text-gray-500">${APP_CONFIG.productTypes[product.productType]?.name || product.productType}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center space-x-1 mb-1">
+                                <div class="w-3 h-3 rounded-full" style="background-color: ${riskColor}"></div>
+                                <span class="text-xs text-gray-600">${APP_CONFIG.riskLevels[product.riskLevel]?.name || product.riskLevel}</span>
+                            </div>
+                            <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                ${product.expectedReturn ? product.expectedReturn + '%' : '保本'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 mb-3 line-clamp-2">${product.description}</p>
+                    
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>起投：¥${product.minInvestment || 0}</span>
+                        <span>${product.investmentPeriod || '长期'}</span>
+                    </div>
+                    
+                    ${product.tags && product.tags.length > 0 ? `
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            ${product.tags.slice(0, 3).map(tag => `
+                                <span class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">${tag}</span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 筛选产品
+        function filterProducts(category) {
+            currentCategory = category;
+            currentPage = 1;
+            
+            // 更新分类标签样式
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.classList.remove('bg-green-500', 'text-white');
+                tab.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('bg-green-500', 'text-white');
+            document.querySelector(`[data-category="${category}"]`).classList.remove('bg-gray-200', 'text-gray-700');
+            
+            loadFinancialProducts();
+        }
+
+        // 搜索设置
+        function setupSearch() {
+            const searchInput = document.getElementById('productSearch');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = this.value.trim();
+                    if (query) {
+                        searchProducts(query);
+                    } else {
+                        loadFinancialProducts();
+                    }
+                }, 300);
+            });
+        }
+
+        // 搜索产品
+        async function searchProducts(query) {
+            const productsList = document.getElementById('productsList');
+            
+            productsList.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+            `;
+            
+            try {
+                const products = await financeManager.searchFinancialProducts(query);
+                
+                if (products.length === 0) {
+                    productsList.innerHTML = `
+                        <div class="text-center py-12 text-gray-500">
+                            <div class="text-4xl mb-2">🔍</div>
+                            <p class="text-sm">未找到相关产品</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                productsList.innerHTML = products.map(product => createProductHTML(product)).join('');
+                
+                // 添加进入动画
+                anime({
+                    targets: '.product-card',
+                    translateY: [20, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(50),
+                    duration: 500,
+                    easing: 'easeOutQuart'
+                });
+                
+            } catch (error) {
+                console.error('Failed to search products:', error);
+                productsList.innerHTML = `<div class="text-center text-red-500 py-4">搜索失败</div>`;
+            }
+        }
+
+        // 显示产品详情
+        function showProductDetail(productId) {
+            const product = financeManager.financialProducts.find(p => p.id === productId);
+            if (!product) return;
+            
+            const modal = document.getElementById('productDetailModal');
+            const content = document.getElementById('detailModalContent');
+            const detailContent = document.getElementById('productDetailContent');
+            
+            const riskColor = financeManager.getRiskLevelColor(product.riskLevel);
+            const typeIcon = financeManager.getProductTypeIcon(product.productType);
+            
+            detailContent.innerHTML = `
+                <div class="space-y-4">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center text-3xl">
+                            ${typeIcon}
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">${product.name}</h3>
+                        <div class="flex items-center justify-center space-x-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: ${riskColor}"></div>
+                            <span class="text-sm text-gray-600">${APP_CONFIG.riskLevels[product.riskLevel]?.name || product.riskLevel}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">产品类型</span>
+                            <span class="font-medium">${APP_CONFIG.productTypes[product.productType]?.name || product.productType}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">预期收益</span>
+                            <span class="font-medium text-green-600">
+                                ${product.expectedReturn ? product.expectedReturn + '%' : '保本'}
+                            </span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">起投金额</span>
+                            <span class="font-medium">¥${product.minInvestment || 0}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-600">投资期限</span>
+                            <span class="font-medium">${product.investmentPeriod || '长期'}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">产品描述</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">${product.description}</p>
+                    </div>
+                    
+                    ${product.features && Object.keys(product.features).length > 0 ? `
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-2">产品特色</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                ${Object.entries(product.features).map(([key, value]) => `
+                                    <div class="flex justify-between p-2 bg-gray-50 rounded">
+                                        <span class="text-gray-600">${key}:</span>
+                                        <span class="font-medium">${value}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${product.tags && product.tags.length > 0 ? `
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-2">产品标签</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${product.tags.map(tag => `
+                                    <span class="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full">${tag}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        // 隐藏产品详情模态框
+        function hideProductDetailModal() {
+            const modal = document.getElementById('productDetailModal');
+            const content = document.getElementById('detailModalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 刷新产品列表
+        function refreshProducts() {
+            showToast('正在刷新产品列表...', 'info');
+            currentPage = 1;
+            loadFinancialProducts();
+        }
+
+        // 加载问卷
+        async function loadQuestionnaires() {
+            try {
+                questionnaires = await financeManager.getQuestionnaires();
+                if (questionnaires.length > 0) {
+                    currentQuestionnaire = questionnaires.find(q => q.type === 'risk_assessment') || questionnaires[0];
+                }
+            } catch (error) {
+                console.error('Failed to load questionnaires:', error);
+            }
+        }
+
+        // 显示风险评估
+        function showRiskAssessment() {
+            if (!currentQuestionnaire) {
+                showToast('问卷加载失败，请稍后重试', 'error');
+                return;
+            }
+            
+            currentQuestionIndex = 0;
+            questionnaireAnswers = {};
+            
+            const modal = document.getElementById('riskAssessmentModal');
+            const content = document.getElementById('assessmentModalContent');
+            const questionnaireContent = document.getElementById('questionnaireContent');
+            
+            showQuestion(questionnaireContent);
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        // 显示问题
+        function showQuestion(container) {
+            const question = currentQuestionnaire.questions[currentQuestionIndex];
+            if (!question) return;
+            
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-500">问题 ${currentQuestionIndex + 1} / ${currentQuestionnaire.questions.length}</span>
+                            <div class="w-20 bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                                     style="width: ${((currentQuestionIndex + 1) / currentQuestionnaire.questions.length) * 100}%"></div>
+                            </div>
+                        </div>
+                        <h4 class="font-medium text-gray-800">${question.question}</h4>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        ${question.options.map((option, index) => `
+                            <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <input type="radio" name="question_${question.id}" value="${option.value}" class="mr-3">
+                                <span class="text-sm text-gray-700">${option.text}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-4">
+                        ${currentQuestionIndex > 0 ? `
+                            <button onclick="previousQuestion()" class="flex-1 bg-gray-200 text-gray-700 p-3 rounded-xl font-medium touch-feedback">
+                                上一题
+                            </button>
+                        ` : ''}
+                        <button onclick="nextQuestion()" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-xl font-medium touch-feedback" 
+                                ${question.type === 'single_choice' ? 'disabled' : ''}>
+                            ${currentQuestionIndex === currentQuestionnaire.questions.length - 1 ? '完成' : '下一题'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            if (question.type === 'single_choice') {
+                const radioButtons = container.querySelectorAll(`input[name="question_${question.id}"]`);
+                const nextButton = container.querySelector('button[onclick="nextQuestion()"]');
+
+                radioButtons.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        // 只要有任何一个选项被选中，就移除禁用状态
+                        if (this.checked) {
+                            nextButton.removeAttribute('disabled');
+                        }
+                    });
+
+                    // 检查是否已经回答过，如果回答过则启用按钮
+                    const previousAnswer = questionnaireAnswers[question.id];
+                    if (previousAnswer && previousAnswer.value == radio.value) {
+                        radio.checked = true; // 确保选中状态恢复
+                        nextButton.removeAttribute('disabled');
+                    }
+                });
+            }
+        }
+
+        // 下一题
+        function nextQuestion() {
+            const question = currentQuestionnaire.questions[currentQuestionIndex];
+            const selectedOption = document.querySelector(`input[name="question_${question.id}"]:checked`);
+            
+            if (!selectedOption) {
+                showToast('请选择一个选项', 'error');
+                return;
+            }
+            
+            questionnaireAnswers[question.id] = {
+                value: selectedOption.value,
+                text: question.options.find(opt => opt.value == selectedOption.value)?.text
+            };
+            
+            if (currentQuestionIndex < currentQuestionnaire.questions.length - 1) {
+                currentQuestionIndex++;
+                const container = document.getElementById('questionnaireContent');
+                showQuestion(container);
+            } else {
+                completeAssessment();
+            }
+        }
+
+        // 上一题
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                const container = document.getElementById('questionnaireContent');
+                showQuestion(container);
+            }
+        }
+
+        // 完成评估
+        async function completeAssessment() {
+            try {
+                // 计算风险评分
+                let totalScore = 0;
+                Object.values(questionnaireAnswers).forEach(answer => {
+                    totalScore += parseInt(answer.value) || 0;
+                });
+                
+                // 确定风险等级
+                let riskLevel = 'balanced';
+                if (totalScore <= 16) {
+                    riskLevel = 'conservative';
+                } else if (totalScore >= 25) {
+                    riskLevel = 'aggressive';
+                }
+                
+                // 更新风险画像
+                const profileData = {
+                    score: totalScore,
+                    answers: questionnaireAnswers,
+                    riskLevel: riskLevel
+                };
+                
+                await financeManager.updateRiskProfile(profileData);
+                riskProfile = profileData;
+                updateRiskProfileDisplay();
+                
+                hideRiskAssessmentModal();
+                showToast('风险评估完成！', 'success');
+                
+                // 重新加载推荐产品
+                loadFinancialProducts();
+                
+            } catch (error) {
+                showToast('评估失败: ' + error.message, 'error');
+            }
+        }
+
+        // 隐藏风险评估模态框
+        function hideRiskAssessmentModal() {
+            const modal = document.getElementById('riskAssessmentModal');
+            const content = document.getElementById('assessmentModalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 隐藏风险评估模态框
+        function hideRiskAssessmentModal() {
+            const modal = document.getElementById('riskAssessmentModal');
+            const content = document.getElementById('assessmentModalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>
