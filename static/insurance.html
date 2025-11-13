@@ -1,303 +1,1834 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>财务保障 - 财务保障</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="智能金融助手 - 基于现代投资组合理论(MPT)的AI投资顾问，为您提供个性化的投资组合推荐" />
+    <meta name="keywords" content="投资组合, MPT, 现代投资组合理论, AI, 智能金融, 投资顾问, 资产配置" />
+    <meta name="author" content="智能金融助手" />
+    <title>智能金融助手 - AI驱动的个性化投资顾问</title>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
+        /* CSS变量定义 - 结合两个页面的风格 */
+        :root {
+            /* 色彩系统 - 基于insurance.html的配色 */
+            --primary-bg-color: #f8faf9; /* 主背景色 */
+            --card-bg-color: #FFFFFF; /* 卡片背景色 */
+            --primary-green: #10B981; /* 主色调 - 柔和的绿色 */
+            --accent-teal: #059669; /* 强调色 - 深绿色 */
+            --danger-red: #EF4444; /* 负面信息色 - 红色 */
+            --warning-orange: #F59E0B; /* 警告色 */
+            --text-primary: #1F2937; /* 主要文字颜色 */
+            --text-secondary: #6B7280; /* 次要文字颜色 */
+            --border-color: #E5E7EB; /* 边框颜色 */
+
+            /* 设计元素 */
+            --border-radius: 12px; /* 卡片圆角 */
+            --card-shadow: 0 4px 20px rgba(45, 90, 39, 0.1); /* 卡片阴影 */
+            --card-hover-shadow: 0 8px 25px rgba(45, 90, 39, 0.15); /* 卡片悬停阴影 */
+
+            /* 字体系统 */
+            --font-family: 'Noto Sans SC', sans-serif;
+            --font-size-xs: 0.75rem;    /* 12px */
+            --font-size-sm: 0.875rem;   /* 14px */
+            --font-size-base: 1rem;     /* 16px */
+            --font-size-lg: 1.125rem;   /* 18px */
+            --font-size-xl: 1.25rem;    /* 20px */
+            --font-size-2xl: 1.5rem;    /* 24px */
+            --font-size-3xl: 1.875rem;  /* 30px */
+
+            /* 间距系统 */
+            --spacing-xs: 0.25rem;   /* 4px */
+            --spacing-sm: 0.5rem;    /* 8px */
+            --spacing-md: 1rem;      /* 16px */
+            --spacing-lg: 1.5rem;    /* 24px */
+            --spacing-xl: 2rem;      /* 32px */
+            --spacing-2xl: 3rem;     /* 48px */
+
+            /* 过渡动画 */
+            --transition-fast: 0.1s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Noto Sans SC', sans-serif;
+            font-family: var(--font-family);
             background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .card-shadow {
-            box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .toast-notification {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+
+        /* 通用卡片样式 */
+        .card {
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border-color);
         }
+
+        .card:hover {
+            box-shadow: var(--card-hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            min-height: 44px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--accent-teal);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--accent-teal);
+            color: white;
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #047857;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        /* 固定顶部标题栏 */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg-color);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            padding: var(--spacing-lg) 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--primary-green);
+            margin: 0;
+        }
+
+        .app-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0 0 0;
+        }
+
+        /* 状态指示器样式 */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 20px;
+            background-color: var(--primary-bg-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge.ready .status-dot {
+            background-color: var(--primary-green);
+        }
+
+        .status-badge.processing .status-dot {
+            background-color: var(--accent-teal);
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+
+        /* 主内容区域 */
+        .app-main {
+            flex: 1;
+            padding-top: 120px;
+            padding-bottom: 120px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding-left: var(--spacing-lg);
+            padding-right: var(--spacing-lg);
+        }
+
+        /* 增强的卡片样式 */
+        .questionnaire-card {
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+            overflow: hidden;
+        }
+
+        .questionnaire-card:hover {
+            box-shadow: var(--card-hover-shadow);
+            transform: translateY(-1px);
+        }
+
+        .card-inner {
+            padding: var(--spacing-xl);
+        }
+
+        /* 严格遵循卡片设计的表单元素 */
+        .form-section {
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+            overflow: hidden;
+        }
+
+        .form-section-header {
+            background-color: rgba(16, 185, 129, 0.05);
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--primary-green);
+            margin: 0;
+        }
+
+        .form-section-body {
+            padding: var(--spacing-lg);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-label .required {
+            color: var(--danger-red);
+            margin-left: 2px;
+        }
+
+        /* 输入框卡片样式 */
+        .input-card {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-family: var(--font-family);
+            background-color: var(--card-bg-color);
+            transition: all var(--transition-fast);
+            min-height: 52px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .input-card:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+            background-color: #FAFBF9;
+        }
+
+        .input-card::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        /* 选择框卡片样式 */
+        .select-card {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-control {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            font-family: var(--font-family);
+            background-color: var(--card-bg-color);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            min-height: 52px;
+            appearance: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%2310B981' d='M8 12L3 7h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right var(--spacing-md) center;
+            padding-right: calc(var(--spacing-md) + 24px);
+        }
+
+        .select-control:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+            background-color: #FAFBF9;
+        }
+
+        /* 单选按钮卡片样式 */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .radio-option {
+            background-color: var(--card-bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .radio-option:hover {
+            border-color: var(--accent-teal);
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary-green);
+            background-color: rgba(16, 185, 129, 0.05);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .radio-label {
+            font-size: var(--font-size-base);
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .radio-label strong {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        /* 固定底部操作区域 */
+        .fixed-bottom-actions {
+            position: fixed;
+            bottom: 4rem; /* 在导航栏上方 */
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-top: 1px solid #E5E7EB;
+            z-index: 40;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .submit-button {
+            background-color: #10B981;
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 1rem 3rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-height: 3.5rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            min-width: 280px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            background-color: #059669;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15);
+        }
+
+        /* 提交按钮加载状态 */
+        .button-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: var(--spacing-sm);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 错误提示卡片 */
+        .error-message-card {
+            background-color: #fef2f2;
+            border: 2px solid var(--danger-red);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-lg);
+            overflow: hidden;
+        }
+
+        .error-content {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-lg);
+            color: var(--danger-red);
+            font-weight: 500;
+        }
+
+        .error-icon {
+            font-size: var(--font-size-lg);
+        }
+
+        /* 加载状态样式 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            padding: var(--spacing-2xl);
+        }
+
+        .loading-card {
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-2xl);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-2xl);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: var(--spacing-md);
+            font-size: var(--font-size-base);
+            color: var(--text-secondary);
+        }
+
+        .loading-text h3 {
+            color: var(--primary-green);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .loading-text p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .loading-steps {
+            text-align: left;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .step {
+            padding: var(--spacing-sm) 0;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            transition: color var(--transition-fast);
+        }
+
+        .step.completed {
+            color: var(--primary-green);
+            font-weight: 500;
+        }
+
+        /* 错误状态样式 */
+        .error-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        .error-content {
+            padding: var(--spacing-xl);
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .error-title {
+            color: var(--danger-red);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-size-2xl);
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+        }
+
+        /* 结果页面样式 */
+        .portfolio-result {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .result-title {
+            font-size: var(--font-size-3xl);
+            color: var(--primary-green);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .user-profile-summary {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            margin-top: var(--spacing-lg);
+        }
+
+        .risk-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 20px;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+
+        .risk-conservative {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .risk-moderate {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .risk-aggressive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .profile-item {
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        .section-subtitle {
+            font-size: var(--font-size-base);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin: var(--spacing-xl) 0;
+        }
+
+        .plan-summary {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            font-size: var(--font-size-lg);
+        }
+
+        .summary-item {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .summary-amount {
+            color: var(--primary-green);
+            font-weight: 600;
+            font-size: var(--font-size-xl);
+        }
+
+        .plan-table-container {
+            overflow-x: auto;
+            margin-top: var(--spacing-lg);
+        }
+
+        .plan-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .plan-table th,
+        .plan-table td {
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .plan-table th {
+            background-color: rgba(16, 185, 129, 0.05);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+        }
+
+        .plan-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fund-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .fund-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .fund-rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-green);
+            color: white;
+            border-radius: 50%;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+        }
+
+        .weight-display {
+            min-width: 150px;
+        }
+
+        .weight-bar {
+            position: relative;
+            height: 20px;
+            background-color: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .weight-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), var(--accent-teal));
+            transition: width 1s ease-in-out;
+        }
+
+        .weight-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            color: var(--text-primary);
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .amount-cell {
+            font-weight: 500;
+        }
+
+        .amount-text {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .risk-level-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .risk-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .risk-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .risk-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+
+        .metric-card {
+            background-color: var(--card-bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            transition: all var(--transition-fast);
+        }
+
+        .metric-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .metric-card.positive {
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .metric-card.warning {
+            border-left: 4px solid var(--warning-orange);
+        }
+
+        .metric-card.danger {
+            border-left: 4px solid var(--danger-red);
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .metric-content {
+            flex: 1;
+        }
+
+        .metric-title {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .positive-value {
+            color: var(--primary-green);
+        }
+
+        .danger-value {
+            color: var(--danger-red);
+        }
+
+        .metric-description {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .explanation-content {
+            margin-top: var(--spacing-lg);
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: var(--spacing-sm);
+        }
+
+        .explanation-text {
+            line-height: 1.8;
+            font-size: var(--font-size-base);
+            color: var(--text-primary);
+        }
+
+        .disclaimer-card {
+            background-color: #fef2f2;
+            border: 2px solid var(--danger-red);
+            border-radius: var(--border-radius);
+            margin: var(--spacing-xl) 0;
+            overflow: hidden;
+        }
+
+        .disclaimer-content {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+            padding: var(--spacing-xl);
+        }
+
+        .disclaimer-icon {
+            font-size: var(--font-size-2xl);
+            color: var(--danger-red);
+            margin-top: var(--spacing-xs);
+        }
+
+        .disclaimer-title {
+            color: var(--danger-red);
+            margin-bottom: var(--spacing-md);
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+        }
+
+        .disclaimer-text {
+            color: var(--danger-red);
+            line-height: 1.6;
+            font-size: var(--font-size-sm);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-2xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* 产品展示区域样式 - 来自insurance.html */
+        .products-container {
+            margin-top: var(--spacing-xl);
+        }
+
+        .product-categories {
+            display: flex;
+            gap: var(--spacing-sm);
+            overflow-x: auto;
+            padding-bottom: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .category-tab {
+            flex-shrink: 0;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: 20px;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+            border: none;
+            cursor: pointer;
+        }
+
+        .category-tab.active {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .product-card {
+            background-color: var(--card-bg-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            box-shadow: var(--card-hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        .product-card.risk-low {
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .product-card.risk-medium {
+            border-left: 4px solid var(--warning-orange);
+        }
+
+        .product-card.risk-high {
+            border-left: 4px solid var(--danger-red);
+        }
+
+        .product-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .product-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xl);
+        }
+
+        .product-risk {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .risk-dot.low {
+            background-color: var(--primary-green);
+        }
+
+        .risk-dot.medium {
+            background-color: var(--warning-orange);
+        }
+
+        .risk-dot.high {
+            background-color: var(--danger-red);
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: var(--font-size-base);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .product-type {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .product-description {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+        }
+
+        .product-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-sm);
+        }
+
+        .product-tag {
+            padding: 2px 8px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-radius: 12px;
+            font-size: var(--font-size-xs);
+        }
+
+        /* 搜索栏样式 */
+        .search-container {
+            position: relative;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) 40px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+            background-color: var(--card-bg-color);
+            transition: all var(--transition-fast);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+                text-align: center;
+            }
+
+            .app-title {
+                font-size: var(--font-size-xl);
+            }
+
+            .error-actions {
+                flex-direction: column;
+            }
+
+            .error-actions .btn {
+                width: 100%;
+            }
+
+            .portfolio-result {
+                padding: var(--spacing-md);
+            }
+
+            .result-title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .user-profile-summary {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+
+            .plan-summary {
+                flex-direction: column;
+                gap: var(--spacing-xs);
+                text-align: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+            }
+
+            .plan-table {
+                font-size: var(--font-size-sm);
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+
+            .questionnaire-form {
+                padding: var(--spacing-md);
+            }
+
+            .form-intro-title {
+                font-size: var(--font-size-xl);
+            }
+
+            .question-title {
+                font-size: var(--font-size-base);
+            }
+
+            .submit-button {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-categories {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* 触摸反馈 */
         .touch-feedback {
             transition: transform 0.1s ease;
         }
+
         .touch-feedback:active {
             transform: scale(0.98);
         }
-        .modal-content {
-            max-height: 90vh;
-            overflow-y: auto;
+
+        /* 调整主内容区域底部间距，为导航栏留出空间 */
+        .app-main {
+            padding-bottom: 160px; /* 增加这个值以适应导航栏高度 */
         }
-        .product-card {
-            transition: all 0.3s ease;
-        }
-        .product-card:active {
-            transform: scale(0.98);
-        }
-        .risk-low { border-left: 4px solid #10B981; }
-        .risk-medium { border-left: 4px solid #F59E0B; }
-        .risk-high { border-left: 4px solid #EF4444; }
     </style>
 </head>
-<body class="min-h-screen pb-20">
-    <!-- Header -->
-    <div class="bg-white shadow-sm px-4 py-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-xl font-bold text-gray-800">财务保障</h1>
-            <div class="flex items-center space-x-2">
-                <button onclick="showRiskAssessment()" class="p-2 text-gray-600 touch-feedback">
-                    <span class="text-lg">📋</span>
-                </button>
-                <button onclick="refreshProducts()" class="p-2 text-gray-600 touch-feedback">
-                    <span class="text-lg">🔄</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Risk Profile Summary -->
-    <div class="px-4 py-4">
-        <div class="bg-white rounded-2xl p-4 card-shadow">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-semibold text-gray-800">风险画像</h3>
-                <button onclick="showRiskAssessment()" class="text-xs text-blue-500">重新评估</button>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="flex-1">
-                    <div class="flex items-center mb-2">
-                        <div class="w-4 h-4 rounded-full mr-2" id="riskLevelColor" style="background-color: #10B981;"></div>
-                        <span class="font-medium" id="riskLevelText">平衡型</span>
+<body>
+    <div class="app-container">
+        <!-- 固定顶部标题栏 -->
+        <header class="app-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="app-title">智能金融助手</h1>
+                    <p class="app-subtitle">基于现代投资组合理论(MPT)的AI投资顾问</p>
+                </div>
+                <div class="header-status">
+                    <div id="statusBadge" class="status-badge ready">
+                        <span class="status-dot"></span>
+                        系统就绪
                     </div>
-                    <p class="text-xs text-gray-600" id="riskLevelDescription">适合中等风险的投资产品</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-gray-500">风险评分</p>
-                    <p class="text-lg font-bold" id="riskScore">75</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <!-- Product Categories -->
-    <div class="px-4 mb-4">
-        <div class="flex space-x-2 overflow-x-auto pb-2">
-            <button onclick="filterProducts('all')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-green-500 text-white" data-category="all">
-                全部
-            </button>
-            <button onclick="filterProducts('fund')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="fund">
-                基金
-            </button>
-            <button onclick="filterProducts('insurance')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="insurance">
-                保险
-            </button>
-            <button onclick="filterProducts('deposit')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="deposit">
-                存款
-            </button>
-            <button onclick="filterProducts('bond')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="bond">
-                债券
-            </button>
-            <button onclick="filterProducts('stock')" class="category-tab flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-200 text-gray-700" data-category="stock">
-                股票
-            </button>
-        </div>
-    </div>
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 问卷表单页面 -->
+            <div id="questionnaireView">
+                <div class="questionnaire-form">
+                    <!-- 问卷说明卡片 -->
+                    <div class="questionnaire-card">
+                        <div class="card-inner">
+                            <h2 class="form-intro-title">投资需求评估问卷</h2>
+                            <p class="form-intro-subtitle">
+                                请填写以下信息，我们将为您定制专属的投资组合方案
+                            </p>
+                        </div>
+                    </div>
 
-    <!-- Search Bar -->
-    <div class="px-4 mb-4">
-        <div class="relative">
-            <input type="text" id="productSearch" placeholder="搜索理财产品..." 
-                   class="w-full p-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <span class="text-gray-400">🔍</span>
+                    <!-- 基本信息 -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3 class="section-title">基本信息</h3>
+                        </div>
+                        <div class="form-section-body">
+                            <!-- 年龄 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    您的年龄 <span class="required">*</span>
+                                </label>
+                                <input
+                                    id="age"
+                                    type="text"
+                                    class="input-card"
+                                    placeholder="请输入您的年龄"
+                                    required
+                                />
+                            </div>
+
+                            <!-- 年度可投资金额 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    年度可投资金额（元）<span class="required">*</span>
+                                </label>
+                                <input
+                                    id="annualInvestmentAmount"
+                                    type="text"
+                                    class="input-card"
+                                    placeholder="请输入年度投资金额"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 投资偏好 -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3 class="section-title">投资偏好</h3>
+                        </div>
+                        <div class="form-section-body">
+                            <!-- 流动性需求 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    流动性需求 <span class="required">*</span>
+                                </label>
+                                <div class="select-card">
+                                    <select id="liquidityDemand" class="select-control" required>
+                                        <option value="">请选择您的流动性需求</option>
+                                        <option value="随时可能取出">随时可能取出</option>
+                                        <option value="半年内可能取出">半年内可能取出</option>
+                                        <option value="1-3年内不会取出">1-3年内不会取出</option>
+                                        <option value="3-5年内不会取出">3-5年内不会取出</option>
+                                        <option value="5年以上不会取出">5年以上不会取出</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 投资目标 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    投资目标 <span class="required">*</span>
+                                </label>
+                                <div class="select-card">
+                                    <select id="targetReturnDescription" class="select-control" required>
+                                        <option value="">请选择您的投资目标</option>
+                                        <option value="保本为主">保本为主</option>
+                                        <option value="跑赢通胀">跑赢通胀</option>
+                                        <option value="稳健增长">稳健增长</option>
+                                        <option value="较高增长">较高增长</option>
+                                        <option value="高增长">高增长</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 投资期限 -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    投资期限 <span class="required">*</span>
+                                </label>
+                                <div class="select-card">
+                                    <select id="investmentHorizon" class="select-control" required>
+                                        <option value="">请选择您的投资期限</option>
+                                        <option value="1年以内">1年以内</option>
+                                        <option value="1-3年">1-3年</option>
+                                        <option value="3-5年">3-5年</option>
+                                        <option value="5-10年">5-10年</option>
+                                        <option value="10年以上">10年以上</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风险评估 -->
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3 class="section-title">风险评估</h3>
+                        </div>
+                        <div class="form-section-body">
+                            <!-- 风险场景选择 -->
+                            <div class="form-group">
+                                <label class="form-label question-title">
+                                    假设您投资了10万元，一个月后亏损了1万元，您会怎么做？
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="radio-group" id="riskScenarioGroup">
+                                    <!-- 选项将通过JS动态生成 -->
+                                </div>
+                            </div>
+
+                            <!-- 风险关注点 -->
+                            <div class="form-group">
+                                <label class="form-label question-title">
+                                    对于投资，您更看重的是？ <span class="required">*</span>
+                                </label>
+                                <div class="radio-group" id="riskFocusGroup">
+                                    <!-- 选项将通过JS动态生成 -->
+                                </div>
+                            </div>
+
+                            <!-- 投资知识水平 -->
+                            <div class="form-group">
+                                <label class="form-label question-title">
+                                    您如何描述自己的投资知识水平？ <span class="required">*</span>
+                                </label>
+                                <div class="radio-group" id="knowledgeGroup">
+                                    <!-- 选项将通过JS动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 错误提示 -->
+                    <div id="errorMessageCard" class="error-message-card hidden">
+                        <div class="error-content">
+                            <span class="error-icon">⚠️</span>
+                            <span id="errorMessageText"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Products List -->
-    <div class="px-4">
-        <div id="productsList" class="space-y-4">
-            <div class="flex items-center justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <!-- 加载状态 -->
+            <div id="loadingView" class="loading-container hidden">
+                <div class="loading-card">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">
+                            <h3>正在生成您的专属投资方案</h3>
+                            <p>基于现代投资组合理论(MPT)进行智能分析...</p>
+                            <div class="loading-steps">
+                                <div id="step1" class="step">✓ 分析用户风险偏好</div>
+                                <div id="step2" class="step">✓ 计算有效边界</div>
+                                <div id="step3" class="step">✓ 优化投资组合</div>
+                                <div id="step4" class="step">
+                                    <span>⏳</span>
+                                    生成AI专业解释
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Empty State -->
-    <div id="emptyState" class="hidden px-4 py-12">
-        <div class="text-center">
-            <div class="text-6xl mb-4">💰</div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">暂无理财产品</h3>
-            <p class="text-sm text-gray-500 mb-6">请检查网络连接或稍后再试</p>
-            <button onclick="refreshProducts()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-medium touch-feedback">
-                重新加载
+            <!-- 结果展示页面 -->
+            <div id="resultView" class="portfolio-result hidden">
+                <!-- 结果内容将通过JS动态生成 -->
+            </div>
+
+            <!-- 产品展示页面 -->
+            <div id="productsView" class="products-container hidden">
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h2 class="section-title">推荐理财产品</h2>
+                        <p class="section-subtitle">基于您的风险偏好为您精选的理财产品</p>
+                        
+                        <!-- 产品分类 -->
+                        <div class="product-categories">
+                            <button class="category-tab active" data-category="all">全部</button>
+                            <button class="category-tab" data-category="fund">基金</button>
+                            <button class="category-tab" data-category="insurance">保险</button>
+                            <button class="category-tab" data-category="deposit">存款</button>
+                            <button class="category-tab" data-category="bond">债券</button>
+                            <button class="category-tab" data-category="stock">股票</button>
+                        </div>
+                        
+                        <!-- 搜索栏 -->
+                        <div class="search-container">
+                            <div class="search-icon">🔍</div>
+                            <input type="text" id="productSearch" class="search-input" placeholder="搜索理财产品...">
+                        </div>
+                        
+                        <!-- 产品列表 -->
+                        <div id="productsList" class="products-grid">
+                            <!-- 产品将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错误页面 -->
+            <div id="errorView" class="error-container hidden">
+                <div class="card">
+                    <div class="error-content">
+                        <div class="error-icon">❌</div>
+                        <h2 class="error-title">出错了</h2>
+                        <p id="errorViewMessage" class="error-message"></p>
+                        <div class="error-actions">
+                            <button id="retryButton" class="btn btn-primary">重试</button>
+                            <button id="resetButton" class="btn btn-outline">重新开始</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+         <!-- 固定底部提交按钮 -->
+        <div id="submitActions" class="fixed-bottom-actions">
+            <button
+                id="submitButton"
+                type="button"
+                class="submit-button"
+                disabled
+            >
+                生成专属投资方案
             </button>
         </div>
-    </div>
 
-    <!-- Product Detail Modal -->
-    <div id="productDetailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-end justify-center min-h-screen">
-            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="detailModalContent">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold" id="productDetailTitle">产品详情</h3>
-                    <button onclick="hideProductDetailModal()" class="text-gray-400 text-xl touch-feedback">×</button>
-                </div>
-                
-                <div id="productDetailContent">
-                    <!-- Product details will be loaded here -->
-                </div>
-                
-                <div class="mt-6">
-                    <button onclick="hideProductDetailModal()" class="w-full bg-gray-200 text-gray-700 p-3 rounded-xl font-medium touch-feedback">
-                        关闭
-                    </button>
-                </div>
+        <!-- 底部导航栏 -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+            <div class="grid grid-cols-5 h-16">
+                <a href="index.html" class="flex flex-col items-center justify-center text-gray-600">
+                    <span class="text-lg mb-1">🏠</span>
+                    <span class="text-xs">首页</span>
+                </a>
+                <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
+                    <span class="text-lg mb-1">📝</span>
+                    <span class="text-xs">账单</span>
+                </a>
+                <a href="analysis.html" class="flex flex-col items-center justify-center text-gray-400">
+                    <span class="text-lg mb-1">📊</span>
+                    <span class="text-xs">分析</span>
+                </a>
+                <a href="savings.html" class="flex flex-col items-center justify-center text-gray-400">
+                    <span class="text-lg mb-1">🎯</span>
+                    <span class="text-xs">储蓄</span>
+                </a>
+                <a href="insurance.html" class="flex flex-col items-center justify-center text-green-400">
+                    <span class="text-lg mb-1">🛡️</span>
+                    <span class="text-xs">保障</span>
+                </a>
             </div>
-        </div>
+        </nav>
     </div>
 
-    <!-- Risk Assessment Modal -->
-    <div id="riskAssessmentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-end justify-center min-h-screen">
-            <div class="bg-white rounded-t-3xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-full modal-content" id="assessmentModalContent">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">风险评估问卷</h3>
-                    <button onclick="hideRiskAssessmentModal()" class="text-gray-400 text-xl touch-feedback">×</button>
-                </div>
-                
-                <div id="questionnaireContent">
-                    <!-- Questionnaire will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div class="grid grid-cols-5 h-16">
-            <a href="index.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">🏠</span>
-                <span class="text-xs">首页</span>
-            </a>
-            <a href="bills.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">📝</span>
-                <span class="text-xs">账单</span>
-            </a>
-            <a href="analysis.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">📊</span>
-                <span class="text-xs">分析</span>
-            </a>
-            <a href="savings.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">🎯</span>
-                <span class="text-xs">储蓄</span>
-            </a>
-            <a href="insurance.html" class="flex flex-col items-center justify-center text-green-600">
-                <span class="text-lg mb-1">🛡️</span>
-                <span class="text-xs">保障</span>
-            </a>
-        </div>
-    </nav>
-
-    <script src="main.js"></script>
     <script>
-        // 保障页面特定的JavaScript
-        let currentCategory = 'all';
-        let currentPage = 1;
-        let isLoading = false;
-        let riskProfile = null;
-        let questionnaires = [];
-        let currentQuestionnaire = null;
-        let currentQuestionIndex = 0;
-        let questionnaireAnswers = {};
+        // 应用状态管理
+        const AppState = {
+            currentView: 'questionnaire',
+            isLoading: false,
+            resultData: null,
+            errorMessage: '',
+            loadingStep: 0
+        };
 
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadRiskProfile();
-            loadFinancialProducts();
-            loadQuestionnaires();
-            setupSearch();
-        });
-
-        // 加载风险画像
-        async function loadRiskProfile() {
-            try {
-                riskProfile = await financeManager.getRiskProfile();
-                updateRiskProfileDisplay();
-            } catch (error) {
-                console.error('Failed to load risk profile:', error);
-                // 使用默认风险画像
-                riskProfile = {
-                    score: 75,
-                    riskLevel: 'balanced',
-                    answers: {}
-                };
-                updateRiskProfileDisplay();
+        // 选项数据
+        const riskScenarioOptions = [
+            {
+                value: 'a) 卖出止损',
+                label: '<strong>a) 卖出止损</strong> - 无法承受本金损失，立即止损'
+            },
+            {
+                value: 'b) 继续持有',
+                label: '<strong>b) 继续持有</strong> - 相信长期投资，等待反弹'
+            },
+            {
+                value: 'c) 加仓买入',
+                label: '<strong>c) 加仓买入</strong> - 认为是买入机会，增加投资'
             }
+        ];
+
+        const riskFocusOptions = [
+            {
+                value: 'a) 本金绝对安全',
+                label: '<strong>a) 本金绝对安全</strong> - 保本是第一位，收益可以适当牺牲'
+            },
+            {
+                value: 'b) 跑赢通胀',
+                label: '<strong>b) 跑赢通胀</strong> - 在控制风险的前提下获取稳定收益'
+            },
+            {
+                value: 'c) 获得远超市场的收益，哪怕风险很高',
+                label: '<strong>c) 获得远超市场的收益</strong> - 追求高收益，愿意承担高风险'
+            }
+        ];
+
+        const knowledgeOptions = [
+            {
+                value: 'a) 小白',
+                label: '<strong>a) 小白</strong> - 投资新手，对金融产品了解有限'
+            },
+            {
+                value: 'b) 略有了解',
+                label: '<strong>b) 略有了解</strong> - 有基本投资概念，有一些投资经验'
+            },
+            {
+                value: 'c) 经验丰富',
+                label: '<strong>c) 经验丰富</strong> - 深入了解各种投资产品，有丰富经验'
+            }
+        ];
+
+        // 产品数据
+        const financialProducts = [
+            {
+                id: 1,
+                name: "稳健增长混合基金",
+                type: "fund",
+                description: "投资于优质股票和债券的混合型基金，追求长期稳健增长",
+                riskLevel: "low",
+                expectedReturn: 5.8,
+                minInvestment: 1000,
+                investmentPeriod: "3年",
+                tags: ["稳健", "混合", "长期"]
+            },
+            {
+                id: 2,
+                name: "高收益债券基金",
+                type: "bond",
+                description: "主要投资于高信用评级企业债券，提供稳定收益",
+                riskLevel: "low",
+                expectedReturn: 4.2,
+                minInvestment: 1000,
+                investmentPeriod: "2年",
+                tags: ["债券", "稳定", "收益"]
+            },
+            {
+                id: 3,
+                name: "科技成长股票基金",
+                type: "fund",
+                description: "专注于科技创新领域的股票基金，追求高成长性",
+                riskLevel: "high",
+                expectedReturn: 12.5,
+                minInvestment: 1000,
+                investmentPeriod: "5年",
+                tags: ["科技", "成长", "高收益"]
+            },
+            {
+                id: 4,
+                name: "定期存款",
+                type: "deposit",
+                description: "银行定期存款产品，本金安全，收益稳定",
+                riskLevel: "low",
+                expectedReturn: 2.1,
+                minInvestment: 50,
+                investmentPeriod: "1年",
+                tags: ["保本", "安全", "定期"]
+            },
+            {
+                id: 5,
+                name: "人寿保险理财计划",
+                type: "insurance",
+                description: "结合保险保障与理财功能的综合性产品",
+                riskLevel: "medium",
+                expectedReturn: 3.8,
+                minInvestment: 5000,
+                investmentPeriod: "10年",
+                tags: ["保险", "保障", "理财"]
+            },
+            {
+                id: 6,
+                name: "蓝筹股投资组合",
+                type: "stock",
+                description: "投资于大型蓝筹公司的股票组合，风险相对可控",
+                riskLevel: "medium",
+                expectedReturn: 8.2,
+                minInvestment: 5000,
+                investmentPeriod: "3年",
+                tags: ["蓝筹", "股票", "分散"]
+            }
+        ];
+
+        // DOM元素引用
+        const elements = {
+            // 视图容器
+            questionnaireView: document.getElementById('questionnaireView'),
+            loadingView: document.getElementById('loadingView'),
+            resultView: document.getElementById('resultView'),
+            productsView: document.getElementById('productsView'),
+            errorView: document.getElementById('errorView'),
+            
+            // 状态指示器
+            statusBadge: document.getElementById('statusBadge'),
+            
+            // 表单元素
+            age: document.getElementById('age'),
+            annualInvestmentAmount: document.getElementById('annualInvestmentAmount'),
+            liquidityDemand: document.getElementById('liquidityDemand'),
+            targetReturnDescription: document.getElementById('targetReturnDescription'),
+            investmentHorizon: document.getElementById('investmentHorizon'),
+            riskScenarioGroup: document.getElementById('riskScenarioGroup'),
+            riskFocusGroup: document.getElementById('riskFocusGroup'),
+            knowledgeGroup: document.getElementById('knowledgeGroup'),
+            
+            // 按钮
+            submitButton: document.getElementById('submitButton'),
+            retryButton: document.getElementById('retryButton'),
+            resetButton: document.getElementById('resetButton'),
+            submitActions: document.getElementById('submitActions'),
+            
+            // 错误信息
+            errorMessageCard: document.getElementById('errorMessageCard'),
+            errorMessageText: document.getElementById('errorMessageText'),
+            errorViewMessage: document.getElementById('errorViewMessage'),
+            
+            // 加载步骤
+            step1: document.getElementById('step1'),
+            step2: document.getElementById('step2'),
+            step3: document.getElementById('step3'),
+            step4: document.getElementById('step4'),
+            
+            // 产品相关
+            productsList: document.getElementById('productsList'),
+            productSearch: document.getElementById('productSearch')
+        };
+
+        // 初始化应用
+        function initApp() {
+            setupRadioOptions();
+            setupEventListeners();
+            elements.submitButton.disabled = true;
+            setupProductCategories();
+            setupProductSearch();
+            showView('questionnaire');
         }
 
-        // 更新风险画像显示
-        function updateRiskProfileDisplay() {
-            if (!riskProfile) return;
-            
-            const riskLevels = {
-                'conservative': { name: '保守型', color: '#10B981', description: '适合低风险的理财产品' },
-                'balanced': { name: '平衡型', color: '#F59E0B', description: '适合中等风险的投资产品' },
-                'aggressive': { name: '积极型', color: '#EF4444', description: '适合高风险的投资产品' }
-            };
-            
-            const level = riskLevels[riskProfile.riskLevel] || riskLevels['balanced'];
-            
-            document.getElementById('riskLevelColor').style.backgroundColor = level.color;
-            document.getElementById('riskLevelText').textContent = level.name;
-            document.getElementById('riskLevelDescription').textContent = level.description;
-            document.getElementById('riskScore').textContent = riskProfile.score || 75;
+        // 设置单选选项
+        function setupRadioOptions() {
+            createRadioOptions(elements.riskScenarioGroup, riskScenarioOptions, 'riskScenario');
+            createRadioOptions(elements.riskFocusGroup, riskFocusOptions, 'riskFocus');
+            createRadioOptions(elements.knowledgeGroup, knowledgeOptions, 'knowledge');
         }
 
-        // 加载理财产品
-        async function loadFinancialProducts() {
-            const productsList = document.getElementById('productsList');
-            const emptyState = document.getElementById('emptyState');
+        // 创建单选选项
+        function createRadioOptions(container, options, name) {
+            container.innerHTML = '';
+            options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'radio-option';
+                optionElement.innerHTML = `
+                    <input type="radio" id="${name}_${index}" name="${name}" value="${option.value}" class="hidden-radio">
+                    <label for="${name}_${index}" class="radio-label">
+                        <span>${option.label}</span>
+                    </label>
+                `;
+                container.appendChild(optionElement);
+                
+                // 添加点击事件
+                optionElement.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    updateRadioSelection(this);
+                    validateForm(); // 添加这一行
+                });
+            });
+        }
+
+        // 更新单选选择状态
+        function updateRadioSelection(selectedElement) {
+            // 移除同组其他选项的选中状态
+            const parent = selectedElement.parentElement;
+            const siblings = parent.querySelectorAll('.radio-option');
+            siblings.forEach(sibling => {
+                sibling.classList.remove('selected');
+            });
             
-            if (currentPage === 1) {
-                productsList.innerHTML = `
-                    <div class="flex items-center justify-center py-8">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            // 添加当前选项的选中状态
+            selectedElement.classList.add('selected');
+        }
+
+        // 设置产品分类
+        function setupProductCategories() {
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有active类
+                    categoryTabs.forEach(t => t.classList.remove('active'));
+                    // 添加当前active类
+                    this.classList.add('active');
+                    
+                    const category = this.getAttribute('data-category');
+                    filterProducts(category);
+                });
+            });
+        }
+
+        // 设置产品搜索
+        function setupProductSearch() {
+            let searchTimeout;
+            elements.productSearch.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = this.value.trim();
+                    if (query) {
+                        searchProducts(query);
+                    } else {
+                        renderProducts();
+                    }
+                }, 300);
+            });
+        }
+
+        // 筛选产品
+        function filterProducts(category) {
+            let filteredProducts = financialProducts;
+            
+            if (category !== 'all') {
+                filteredProducts = financialProducts.filter(product => product.type === category);
+            }
+            
+            renderProducts(filteredProducts);
+        }
+
+        // 搜索产品
+        function searchProducts(query) {
+            const filteredProducts = financialProducts.filter(product => 
+                product.name.toLowerCase().includes(query.toLowerCase()) ||
+                product.description.toLowerCase().includes(query.toLowerCase()) ||
+                product.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+            );
+            
+            renderProducts(filteredProducts);
+        }
+
+        // 渲染产品列表
+        function renderProducts(products = financialProducts) {
+            elements.productsList.innerHTML = '';
+            
+            if (products.length === 0) {
+                elements.productsList.innerHTML = `
+                    <div class="text-center py-8 col-span-full">
+                        <div class="text-4xl mb-2">🔍</div>
+                        <p class="text-gray-500">未找到相关产品</p>
                     </div>
                 `;
+                return;
             }
             
-            try {
-                let products = [];
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = `product-card risk-${product.riskLevel} touch-feedback`;
+                productElement.innerHTML = `
+                    <div class="product-header">
+                        <div class="product-icon">💰</div>
+                        <div class="product-risk">
+                            <div class="risk-dot ${product.riskLevel}"></div>
+                            <span class="text-xs">${getRiskLevelText(product.riskLevel)}</span>
+                        </div>
+                    </div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-type">${getProductTypeText(product.type)}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-meta">
+                        <span>预期收益: ${product.expectedReturn}%</span>
+                        <span>起投: ¥${product.minInvestment}</span>
+                    </div>
+                    <div class="product-tags">
+                        ${product.tags.map(tag => `<span class="product-tag">${tag}</span>`).join('')}
+                    </div>
+                `;
                 
-                if (currentCategory === 'all') {
-                    products = await financeManager.getFinancialProducts();
-                } else {
-                    products = await financeManager.searchFinancialProducts('', currentCategory);
-                }
-                
-                if (products.length === 0 && currentPage === 1) {
-                    productsList.innerHTML = '';
-                    emptyState.classList.remove('hidden');
-                    return;
-                }
-                
-                emptyState.classList.add('hidden');
-                
-                if (currentPage === 1) {
-                    productsList.innerHTML = '';
-                }
-                
-                const productHTML = products.map(product => createProductHTML(product)).join('');
-                
-                if (currentPage === 1) {
-                    productsList.innerHTML = productHTML;
-                } else {
-                    productsList.insertAdjacentHTML('beforeend', productHTML);
-                }
-                
-                // 添加进入动画
+                elements.productsList.appendChild(productElement);
+            });
+            
+            // 添加进入动画
+            if (window.anime) {
                 anime({
                     targets: '.product-card',
                     translateY: [20, 0],
@@ -306,431 +1837,659 @@
                     duration: 500,
                     easing: 'easeOutQuart'
                 });
-                
-            } catch (error) {
-                console.error('Failed to load financial products:', error);
-                if (currentPage === 1) {
-                    productsList.innerHTML = `<div class="text-center text-red-500 py-4">加载产品失败</div>`;
-                }
-            } finally {
-                isLoading = false;
             }
         }
 
-        // 创建产品HTML
-        function createProductHTML(product) {
-            const riskClass = `risk-${product.riskLevel}`;
-            const riskColor = financeManager.getRiskLevelColor(product.riskLevel);
-            const typeIcon = financeManager.getProductTypeIcon(product.productType);
-            
-            return `
-                <div class="product-card bg-white rounded-2xl p-4 card-shadow ${riskClass}" onclick="showProductDetail(${product.id})">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center text-2xl">
-                                ${typeIcon}
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-gray-800 text-sm">${product.name}</h3>
-                                <p class="text-xs text-gray-500">${APP_CONFIG.productTypes[product.productType]?.name || product.productType}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="flex items-center space-x-1 mb-1">
-                                <div class="w-3 h-3 rounded-full" style="background-color: ${riskColor}"></div>
-                                <span class="text-xs text-gray-600">${APP_CONFIG.riskLevels[product.riskLevel]?.name || product.riskLevel}</span>
-                            </div>
-                            <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                                ${product.expectedReturn ? product.expectedReturn + '%' : '保本'}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <p class="text-xs text-gray-600 mb-3 line-clamp-2">${product.description}</p>
-                    
-                    <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span>起投：¥${product.minInvestment || 0}</span>
-                        <span>${product.investmentPeriod || '长期'}</span>
-                    </div>
-                    
-                    ${product.tags && product.tags.length > 0 ? `
-                        <div class="flex flex-wrap gap-1 mt-2">
-                            ${product.tags.slice(0, 3).map(tag => `
-                                <span class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">${tag}</span>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
+        // 获取风险等级文本
+        function getRiskLevelText(riskLevel) {
+            const riskLevels = {
+                'low': '低风险',
+                'medium': '中等风险',
+                'high': '高风险'
+            };
+            return riskLevels[riskLevel] || '未知风险';
         }
 
-        // 筛选产品
-        function filterProducts(category) {
-            currentCategory = category;
-            currentPage = 1;
-            
-            // 更新分类标签样式
-            document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.classList.remove('bg-green-500', 'text-white');
-                tab.classList.add('bg-gray-200', 'text-gray-700');
-            });
-            document.querySelector(`[data-category="${category}"]`).classList.add('bg-green-500', 'text-white');
-            document.querySelector(`[data-category="${category}"]`).classList.remove('bg-gray-200', 'text-gray-700');
-            
-            loadFinancialProducts();
+        // 获取产品类型文本
+        function getProductTypeText(type) {
+            const productTypes = {
+                'fund': '基金',
+                'insurance': '保险',
+                'deposit': '存款',
+                'bond': '债券',
+                'stock': '股票'
+            };
+            return productTypes[type] || '其他';
         }
 
-        // 搜索设置
-        function setupSearch() {
-            const searchInput = document.getElementById('productSearch');
-            let searchTimeout;
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 提交按钮
+            elements.submitButton.addEventListener('click', handleFormSubmit);
             
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    const query = this.value.trim();
-                    if (query) {
-                        searchProducts(query);
-                    } else {
-                        loadFinancialProducts();
-                    }
-                }, 300);
+            // 重试和重置按钮
+            elements.retryButton.addEventListener('click', handleRetry);
+            elements.resetButton.addEventListener('click', handleReset);
+            
+            // 表单输入验证
+            const formInputs = document.querySelectorAll('input, select');
+            formInputs.forEach(input => {
+                input.addEventListener('input', validateForm);
+                input.addEventListener('change', validateForm);
             });
         }
 
-        // 搜索产品
-        async function searchProducts(query) {
-            const productsList = document.getElementById('productsList');
+        // 显示指定视图
+        function showView(viewName) {
+            // 隐藏所有视图
+            elements.questionnaireView.classList.add('hidden');
+            elements.loadingView.classList.add('hidden');
+            elements.resultView.classList.add('hidden');
+            elements.productsView.classList.add('hidden');
+            elements.errorView.classList.add('hidden');
             
-            productsList.innerHTML = `
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
-            `;
-            
-            try {
-                const products = await financeManager.searchFinancialProducts(query);
-                
-                if (products.length === 0) {
-                    productsList.innerHTML = `
-                        <div class="text-center py-12 text-gray-500">
-                            <div class="text-4xl mb-2">🔍</div>
-                            <p class="text-sm">未找到相关产品</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                productsList.innerHTML = products.map(product => createProductHTML(product)).join('');
-                
-                // 添加进入动画
-                anime({
-                    targets: '.product-card',
-                    translateY: [20, 0],
-                    opacity: [0, 1],
-                    delay: anime.stagger(50),
-                    duration: 500,
-                    easing: 'easeOutQuart'
-                });
-                
-            } catch (error) {
-                console.error('Failed to search products:', error);
-                productsList.innerHTML = `<div class="text-center text-red-500 py-4">搜索失败</div>`;
+            // 显示指定视图
+            switch (viewName) {
+                case 'questionnaire':
+                    elements.questionnaireView.classList.remove('hidden');
+                    elements.submitActions.classList.remove('hidden');
+                    updateStatusBadge('ready');
+                    break;
+                case 'loading':
+                    elements.loadingView.classList.remove('hidden');
+                    elements.submitActions.classList.add('hidden');
+                    updateStatusBadge('processing');
+                    break;
+                case 'result':
+                    elements.resultView.classList.remove('hidden');
+                    elements.submitActions.classList.add('hidden');
+                    updateStatusBadge('ready');
+                    break;
+                case 'products':
+                    elements.productsView.classList.remove('hidden');
+                    elements.submitActions.classList.add('hidden');
+                    updateStatusBadge('ready');
+                    renderProducts();
+                    break;
+                case 'error':
+                    elements.errorView.classList.remove('hidden');
+                    elements.submitActions.classList.add('hidden');
+                    updateStatusBadge('ready');
+                    break;
             }
+            
+            AppState.currentView = viewName;
         }
 
-        // 显示产品详情
-        function showProductDetail(productId) {
-            const product = financeManager.financialProducts.find(p => p.id === productId);
-            if (!product) return;
-            
-            const modal = document.getElementById('productDetailModal');
-            const content = document.getElementById('detailModalContent');
-            const detailContent = document.getElementById('productDetailContent');
-            
-            const riskColor = financeManager.getRiskLevelColor(product.riskLevel);
-            const typeIcon = financeManager.getProductTypeIcon(product.productType);
-            
-            detailContent.innerHTML = `
-                <div class="space-y-4">
-                    <div class="text-center mb-4">
-                        <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center text-3xl">
-                            ${typeIcon}
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-1">${product.name}</h3>
-                        <div class="flex items-center justify-center space-x-2">
-                            <div class="w-3 h-3 rounded-full" style="background-color: ${riskColor}"></div>
-                            <span class="text-sm text-gray-600">${APP_CONFIG.riskLevels[product.riskLevel]?.name || product.riskLevel}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">产品类型</span>
-                            <span class="font-medium">${APP_CONFIG.productTypes[product.productType]?.name || product.productType}</span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">预期收益</span>
-                            <span class="font-medium text-green-600">
-                                ${product.expectedReturn ? product.expectedReturn + '%' : '保本'}
-                            </span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">起投金额</span>
-                            <span class="font-medium">¥${product.minInvestment || 0}</span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">投资期限</span>
-                            <span class="font-medium">${product.investmentPeriod || '长期'}</span>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4 class="font-medium text-gray-800 mb-2">产品描述</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">${product.description}</p>
-                    </div>
-                    
-                    ${product.features && Object.keys(product.features).length > 0 ? `
-                        <div>
-                            <h4 class="font-medium text-gray-800 mb-2">产品特色</h4>
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                ${Object.entries(product.features).map(([key, value]) => `
-                                    <div class="flex justify-between p-2 bg-gray-50 rounded">
-                                        <span class="text-gray-600">${key}:</span>
-                                        <span class="font-medium">${value}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    ${product.tags && product.tags.length > 0 ? `
-                        <div>
-                            <h4 class="font-medium text-gray-800 mb-2">产品标签</h4>
-                            <div class="flex flex-wrap gap-2">
-                                ${product.tags.map(tag => `
-                                    <span class="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full">${tag}</span>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
+        // 更新状态指示器
+        function updateStatusBadge(status) {
+            elements.statusBadge.className = 'status-badge ' + status;
+            elements.statusBadge.innerHTML = `
+                <span class="status-dot"></span>
+                ${status === 'ready' ? '系统就绪' : '处理中...'}
             `;
+        }
+
+        // 表单验证
+        function validateForm() {
+            const isValid = isFormValid();
+            elements.submitButton.disabled = !isValid;
+            return isValid;
+        }
+
+        // 检查表单是否有效
+        function isFormValid() {
+            const formData = getFormData();
+            const requiredFields = [
+                formData.age,
+                formData.annual_investment_amount,
+                formData.liquidity_demand,
+                formData.target_return_description,
+                formData.investment_horizon,
+                formData.risk_scenario_choice,
+                formData.risk_focus_choice,
+                formData.investment_knowledge_level
+            ];
             
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('translate-y-full');
-            }, 10);
+            return requiredFields.every(field => field && field.trim() !== '');
         }
 
-        // 隐藏产品详情模态框
-        function hideProductDetailModal() {
-            const modal = document.getElementById('productDetailModal');
-            const content = document.getElementById('detailModalContent');
+        // 获取表单数据
+        function getFormData() {
+            const riskScenarioSelected = document.querySelector('input[name="riskScenario"]:checked');
+            const riskFocusSelected = document.querySelector('input[name="riskFocus"]:checked');
+            const knowledgeSelected = document.querySelector('input[name="knowledge"]:checked');
             
-            content.classList.add('translate-y-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            return {
+                age: elements.age.value,
+                annual_investment_amount: elements.annualInvestmentAmount.value,
+                liquidity_demand: elements.liquidityDemand.value,
+                target_return_description: elements.targetReturnDescription.value,
+                investment_horizon: elements.investmentHorizon.value,
+                risk_scenario_choice: riskScenarioSelected ? riskScenarioSelected.value : '',
+                risk_focus_choice: riskFocusSelected ? riskFocusSelected.value : '',
+                investment_knowledge_level: knowledgeSelected ? knowledgeSelected.value : ''
+            };
         }
 
-        // 刷新产品列表
-        function refreshProducts() {
-            showToast('正在刷新产品列表...', 'info');
-            currentPage = 1;
-            loadFinancialProducts();
+        // 显示错误信息
+        function showError(message) {
+            elements.errorMessageText.textContent = message;
+            elements.errorMessageCard.classList.remove('hidden');
         }
 
-        // 加载问卷
-        async function loadQuestionnaires() {
-            try {
-                questionnaires = await financeManager.getQuestionnaires();
-                if (questionnaires.length > 0) {
-                    currentQuestionnaire = questionnaires.find(q => q.type === 'risk_assessment') || questionnaires[0];
-                }
-            } catch (error) {
-                console.error('Failed to load questionnaires:', error);
-            }
+        // 隐藏错误信息
+        function hideError() {
+            elements.errorMessageCard.classList.add('hidden');
         }
 
-        // 显示风险评估
-        function showRiskAssessment() {
-            if (!currentQuestionnaire) {
-                showToast('问卷加载失败，请稍后重试', 'error');
+        // 处理表单提交
+        async function handleFormSubmit() {
+            if (!validateForm()) {
+                showError('请填写所有必填字段');
                 return;
             }
+
+            const formData = getFormData();
             
-            currentQuestionIndex = 0;
-            questionnaireAnswers = {};
-            
-            const modal = document.getElementById('riskAssessmentModal');
-            const content = document.getElementById('assessmentModalContent');
-            const questionnaireContent = document.getElementById('questionnaireContent');
-            
-            showQuestion(questionnaireContent);
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('translate-y-full');
-            }, 10);
+            // 验证年龄
+            const age = parseInt(formData.age);
+            if (isNaN(age) || age < 18 || age > 100) {
+                showError('请输入有效的年龄（18-100岁）');
+                return;
+            }
+
+            // 验证投资金额
+            const amount = parseFloat(formData.annual_investment_amount);
+            if (isNaN(amount) || amount <= 0) {
+                showError('请输入有效的投资金额（大于0）');
+                return;
+            }
+
+            hideError();
+            await submitFormData(formData);
         }
 
-        // 显示问题
-        function showQuestion(container) {
-            const question = currentQuestionnaire.questions[currentQuestionIndex];
-            if (!question) return;
+        // 提交表单数据
+        async function submitFormData(formData) {
+            showView('loading');
+            AppState.isLoading = true;
+            AppState.errorMessage = '';
             
-            container.innerHTML = `
-                <div class="space-y-4">
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm text-gray-500">问题 ${currentQuestionIndex + 1} / ${currentQuestionnaire.questions.length}</span>
-                            <div class="w-20 bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                                     style="width: ${((currentQuestionIndex + 1) / currentQuestionnaire.questions.length) * 100}%"></div>
-                            </div>
-                        </div>
-                        <h4 class="font-medium text-gray-800">${question.question}</h4>
-                    </div>
+            try {
+                // 开始模拟加载步骤
+                const loadingPromise = simulateLoadingSteps();
+                
+                // 发送API请求
+                const response = await fetch('/api/invest/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData),
+                    timeout: 60000
+                });
+                
+                // 等待加载动画完成
+                await loadingPromise;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // 检查响应结果
+                if (result.success) {
+                    AppState.resultData = result;
+                    showView('result');
+                    renderResultView(result);
                     
-                    <div class="space-y-2">
-                        ${question.options.map((option, index) => `
-                            <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
-                                <input type="radio" name="question_${question.id}" value="${option.value}" class="mr-3">
-                                <span class="text-sm text-gray-700">${option.text}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="flex space-x-3 pt-4">
-                        ${currentQuestionIndex > 0 ? `
-                            <button onclick="previousQuestion()" class="flex-1 bg-gray-200 text-gray-700 p-3 rounded-xl font-medium touch-feedback">
-                                上一题
-                            </button>
-                        ` : ''}
-                        <button onclick="nextQuestion()" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-xl font-medium touch-feedback" 
-                                ${question.type === 'single_choice' ? 'disabled' : ''}>
-                            ${currentQuestionIndex === currentQuestionnaire.questions.length - 1 ? '完成' : '下一题'}
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            if (question.type === 'single_choice') {
-                const radioButtons = container.querySelectorAll(`input[name="question_${question.id}"]`);
-                const nextButton = container.querySelector('button[onclick="nextQuestion()"]');
-
-                radioButtons.forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        // 只要有任何一个选项被选中，就移除禁用状态
-                        if (this.checked) {
-                            nextButton.removeAttribute('disabled');
-                        }
+                    // 记录成功事件
+                    console.log('投资推荐生成成功:', {
+                        timestamp: result.timestamp,
+                        userRiskScore: result.data?.user_profile?.risk_score,
+                        expectedReturn: result.data?.the_metrics?.expected_return
                     });
-
-                    // 检查是否已经回答过，如果回答过则启用按钮
-                    const previousAnswer = questionnaireAnswers[question.id];
-                    if (previousAnswer && previousAnswer.value == radio.value) {
-                        radio.checked = true; // 确保选中状态恢复
-                        nextButton.removeAttribute('disabled');
-                    }
-                });
+                } else {
+                    throw new Error(result.error || '生成投资方案失败');
+                }
+                
+            } catch (error) {
+                console.error('API请求错误:', error);
+                handleApiError(error);
+            } finally {
+                AppState.isLoading = false;
             }
         }
 
-        // 下一题
-        function nextQuestion() {
-            const question = currentQuestionnaire.questions[currentQuestionIndex];
-            const selectedOption = document.querySelector(`input[name="question_${question.id}"]:checked`);
+        // 模拟加载步骤
+        async function simulateLoadingSteps() {
+            AppState.loadingStep = 0;
+            const steps = [
+                { element: elements.step1, delay: 800 },
+                { element: elements.step2, delay: 1200 },
+                { element: elements.step3, delay: 1000 },
+                { element: elements.step4, delay: 1500 }
+            ];
             
-            if (!selectedOption) {
-                showToast('请选择一个选项', 'error');
+            for (let i = 0; i < steps.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, steps[i].delay));
+                steps[i].element.classList.add('completed');
+                if (i === 3) {
+                    steps[i].element.innerHTML = '✓ 生成AI专业解释';
+                }
+                AppState.loadingStep = i + 1;
+            }
+        }
+
+        // 处理API错误
+        function handleApiError(error) {
+            let errorMessage = '';
+            
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage = '网络连接失败，请检查网络后重试';
+            } else if (error.message.includes('HTTP error')) {
+                const status = parseInt(error.message.match(/\d+/)[0]);
+                switch (status) {
+                    case 400:
+                        errorMessage = '请求参数错误，请检查输入信息';
+                        break;
+                    case 429:
+                        errorMessage = '请求过于频繁，请稍后再试';
+                        break;
+                    case 500:
+                        errorMessage = '服务器内部错误，请稍后重试';
+                        break;
+                    case 503:
+                        errorMessage = '投资优化服务暂时不可用，请稍后重试';
+                        break;
+                    default:
+                        errorMessage = `服务器错误 (${status}): 请稍后重试`;
+                }
+            } else {
+                errorMessage = error.message || '系统发生未知错误，请重试';
+            }
+            
+            AppState.errorMessage = errorMessage;
+            elements.errorViewMessage.textContent = errorMessage;
+            showView('error');
+        }
+
+        // 处理重试
+        function handleRetry() {
+            showView('questionnaire');
+            AppState.errorMessage = '';
+            AppState.loadingStep = 0;
+            
+            // 重置加载步骤显示
+            [elements.step1, elements.step2, elements.step3, elements.step4].forEach((step, index) => {
+                step.classList.remove('completed');
+                if (index === 3) {
+                    step.innerHTML = '<span>⏳</span> 生成AI专业解释';
+                }
+            });
+        }
+
+        // 处理重置
+        function handleReset() {
+            // 重置表单
+            elements.age.value = '';
+            elements.annualInvestmentAmount.value = '';
+            elements.liquidityDemand.value = '';
+            elements.targetReturnDescription.value = '';
+            elements.investmentHorizon.value = '';
+            
+            // 重置单选按钮
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('.radio-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 重置状态
+            AppState.resultData = null;
+            AppState.errorMessage = '';
+            AppState.loadingStep = 0;
+            
+            // 显示问卷视图
+            showView('questionnaire');
+            hideError();
+            
+            // 清除滚动位置
+            window.scrollTo(0, 0);
+        }
+
+        // 渲染结果视图
+        function renderResultView(resultData) {
+            const thePlan = resultData.data?.the_plan || {};
+            const theMetrics = resultData.data?.the_metrics || {};
+            const theExplanation = resultData.data?.the_explanation || {};
+            const userProfile = resultData.data?.user_profile || {};
+            
+            elements.resultView.innerHTML = `
+                <!-- 购买计划标题卡片 -->
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h1 class="result-title">您的专属投资购买计划</h1>
+                        <div class="user-profile-summary">
+                            <span class="risk-badge ${getRiskLevelClass(userProfile.risk_score)}">
+                                ${userProfile.risk_level || '普通'}投资者
+                            </span>
+                            <span class="profile-item">年龄：${userProfile.age || ''}岁</span>
+                            <span class="profile-item">投资期限：${userProfile.investment_horizon || ''}</span>
+                            <span class="profile-item">风险评分：${userProfile.risk_score || 0}/10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 投资组合图表卡片 -->
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h2 class="section-title">投资组合配置</h2>
+                        <div class="chart-container">
+                            <canvas id="portfolioChart" width="400" height="400"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 购买计划列表卡片 (The Plan) -->
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h2 class="section-title">详细购买计划</h2>
+                        <div class="plan-summary">
+                            <span class="summary-item">总投资金额：</span>
+                            <span class="summary-amount">${formatCurrency(thePlan.total_investment || 0)}</span>
+                        </div>
+                        <div class="plan-table-container">
+                            <table class="plan-table">
+                                <thead>
+                                    <tr>
+                                        <th>基金名称</th>
+                                        <th>配置权重</th>
+                                        <th>投资金额</th>
+                                        <th>风险等级</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${renderPlanTable(thePlan.plan_list || [])}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风险量化面板卡片 (The Metrics) -->
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h2 class="section-title">风险量化指标</h2>
+                        <p class="section-subtitle">基于现代投资组合理论(MPT)计算的风险指标</p>
+
+                        <div class="metrics-grid">
+                            <div class="metric-card positive">
+                                <div class="metric-icon">📈</div>
+                                <div class="metric-content">
+                                    <div class="metric-title">预期年化收益率</div>
+                                    <div class="metric-value positive-value">
+                                        ${formatPercentage(theMetrics.expected_return || 0)}
+                                    </div>
+                                    <div class="metric-description">基于历史数据预测的年化收益率</div>
+                                </div>
+                            </div>
+
+                            <div class="metric-card warning">
+                                <div class="metric-icon">📊</div>
+                                <div class="metric-content">
+                                    <div class="metric-title">预期年化波动率</div>
+                                    <div class="metric-value danger-value">
+                                        ${formatPercentage(theMetrics.expected_volatility || 0)}
+                                    </div>
+                                    <div class="metric-description">收益率的标准差，衡量投资风险</div>
+                                </div>
+                            </div>
+
+                            <div class="metric-card danger">
+                                <div class="metric-icon">⚠️</div>
+                                <div class="metric-content">
+                                    <div class="metric-title">预期最大回撤</div>
+                                    <div class="metric-value danger-value">
+                                        ${formatPercentage(theMetrics.max_drawdown_estimate || 0)}
+                                    </div>
+                                    <div class="metric-description">预估可能出现的最大亏损幅度</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI专业解释卡片 (The Explanation) -->
+                <div class="questionnaire-card">
+                    <div class="card-inner">
+                        <h2 class="section-title">AI专业投资解释</h2>
+                        <p class="section-subtitle">由Qwen大模型基于MPT理论生成的专业分析</p>
+
+                        <div class="explanation-content">
+                            <div class="explanation-text">${formatExplanationText(theExplanation.qwen_explanation_text || '')}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 重要免责声明卡片 -->
+                <div class="disclaimer-card">
+                    <div class="disclaimer-content">
+                        <div class="disclaimer-icon">⚠️</div>
+                        <h3 class="disclaimer-title">重要免责声明</h3>
+                        <div class="disclaimer-text">${formatExplanationText(theExplanation.disclaimer || '')}</div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮区域 -->
+                <div class="action-buttons">
+                    <button id="resetFromResult" class="btn btn-outline">重新评估</button>
+                    <button id="viewProducts" class="btn btn-secondary">查看推荐产品</button>
+                    <button id="exportButton" class="btn btn-primary">导出报告</button>
+                </div>
+            `;
+            
+            // 添加结果页面的按钮事件
+            document.getElementById('resetFromResult').addEventListener('click', handleReset);
+            document.getElementById('viewProducts').addEventListener('click', () => showView('products'));
+            document.getElementById('exportButton').addEventListener('click', () => handleExport(resultData));
+            
+            // 创建图表
+            createPortfolioChart(thePlan.plan_list || []);
+        }
+
+        // 渲染计划表格
+        function renderPlanTable(planList) {
+            if (!planList.length) {
+                return '<tr><td colspan="4" style="text-align: center;">暂无数据</td></tr>';
+            }
+            
+            return planList.map((item, index) => `
+                <tr>
+                    <td class="fund-name">
+                        <div class="fund-info">
+                            <span class="fund-rank">${index + 1}</span>
+                            ${item.fund_name || ''}
+                        </div>
+                    </td>
+                    <td class="weight-cell">
+                        <div class="weight-display">
+                            <div class="weight-bar">
+                                <div
+                                    class="weight-fill"
+                                    style="width: ${item.weight_percentage || 0}%"
+                                ></div>
+                                <span class="weight-text">${(item.weight_percentage || 0).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="amount-cell">
+                        <span class="amount-text">${formatCurrency(item.investment_amount || 0)}</span>
+                    </td>
+                    <td class="risk-cell">
+                        <span class="risk-level-badge ${getFundRiskLevelClass(item)}">
+                            ${getFundRiskLevel(item)}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 创建投资组合图表
+        function createPortfolioChart(planList) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            if (!planList.length) {
+                // 显示无数据消息
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#7F8C8D';
+                ctx.textAlign = 'center';
+                ctx.fillText('暂无数据', 200, 200);
                 return;
             }
             
-            questionnaireAnswers[question.id] = {
-                value: selectedOption.value,
-                text: question.options.find(opt => opt.value == selectedOption.value)?.text
+            const chartData = {
+                labels: planList.map(item => item.fund_name),
+                datasets: [{
+                    data: planList.map(item => item.weight_percentage),
+                    backgroundColor: [
+                        '#10B981', '#059669', '#34D399', '#10B981',
+                        '#F59E0B', '#FBBF24', '#EF4444', '#F87171',
+                        '#60A5FA', '#3B82F6'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF'
+                }]
             };
             
-            if (currentQuestionIndex < currentQuestionnaire.questions.length - 1) {
-                currentQuestionIndex++;
-                const container = document.getElementById('questionnaireContent');
-                showQuestion(container);
-            } else {
-                completeAssessment();
-            }
-        }
-
-        // 上一题
-        function previousQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                const container = document.getElementById('questionnaireContent');
-                showQuestion(container);
-            }
-        }
-
-        // 完成评估
-        async function completeAssessment() {
-            try {
-                // 计算风险评分
-                let totalScore = 0;
-                Object.values(questionnaireAnswers).forEach(answer => {
-                    totalScore += parseInt(answer.value) || 0;
-                });
-                
-                // 确定风险等级
-                let riskLevel = 'balanced';
-                if (totalScore <= 16) {
-                    riskLevel = 'conservative';
-                } else if (totalScore >= 25) {
-                    riskLevel = 'aggressive';
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = value.toFixed(1);
+                                    return `${label}: ${percentage}%`;
+                                }
+                            }
+                        }
+                    }
                 }
-                
-                // 更新风险画像
-                const profileData = {
-                    score: totalScore,
-                    answers: questionnaireAnswers,
-                    riskLevel: riskLevel
+            });
+        }
+
+        // 处理导出
+        function handleExport(data) {
+            try {
+                // 创建导出数据
+                const exportData = {
+                    title: '智能金融助手 - 投资组合报告',
+                    timestamp: new Date().toLocaleString('zh-CN'),
+                    user_profile: data.data?.user_profile || {},
+                    the_plan: data.data?.the_plan || {},
+                    the_metrics: data.data?.the_metrics || {},
+                    the_explanation: data.data?.the_explanation || {}
                 };
-                
-                await financeManager.updateRiskProfile(profileData);
-                riskProfile = profileData;
-                updateRiskProfileDisplay();
-                
-                hideRiskAssessmentModal();
-                showToast('风险评估完成！', 'success');
-                
-                // 重新加载推荐产品
-                loadFinancialProducts();
-                
+
+                // 转换为JSON字符串
+                const jsonString = JSON.stringify(exportData, null, 2);
+
+                // 创建Blob对象
+                const blob = new Blob([jsonString], { type: 'application/json' });
+
+                // 创建下载链接
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `投资组合报告_${new Date().toISOString().split('T')[0]}.json`;
+
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // 清理URL对象
+                URL.revokeObjectURL(url);
+
+                // 显示成功提示
+                alert('投资组合报告已导出');
+
             } catch (error) {
-                showToast('评估失败: ' + error.message, 'error');
+                console.error('导出失败:', error);
+                alert('导出失败，请重试');
             }
         }
 
-        // 隐藏风险评估模态框
-        function hideRiskAssessmentModal() {
-            const modal = document.getElementById('riskAssessmentModal');
-            const content = document.getElementById('assessmentModalContent');
-            
-            content.classList.add('translate-y-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+        // 工具函数
+        function getRiskLevelClass(riskScore) {
+            if (riskScore <= 3) return 'risk-conservative';
+            if (riskScore <= 7) return 'risk-moderate';
+            return 'risk-aggressive';
         }
 
-        // 隐藏风险评估模态框
-        function hideRiskAssessmentModal() {
-            const modal = document.getElementById('riskAssessmentModal');
-            const content = document.getElementById('assessmentModalContent');
-            
-            content.classList.add('translate-y-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+        function getFundRiskLevel(fund) {
+            const fundName = fund.fund_name || '';
+            if (fundName.includes('货币') || fundName.includes('债券') || fundName.includes('稳健')) {
+                return '低风险';
+            } else if (fundName.includes('混合') || fundName.includes('指数') || fundName.includes('QDII')) {
+                return '中等风险';
+            } else if (fundName.includes('股票') || fundName.includes('成长') || fundName.includes('REITs') || fundName.includes('商品')) {
+                return '高风险';
+            }
+            return '中等风险';
         }
+
+        function getFundRiskLevelClass(fund) {
+            const riskLevel = getFundRiskLevel(fund);
+            switch (riskLevel) {
+                case '低风险':
+                    return 'risk-low';
+                case '中等风险':
+                    return 'risk-medium';
+                case '高风险':
+                    return 'risk-high';
+                default:
+                    return 'risk-medium';
+            }
+        }
+
+        function formatPercentage(value) {
+            if (typeof value !== 'number') return '0.00%';
+            return (value * 100).toFixed(2) + '%';
+        }
+
+        function formatCurrency(amount) {
+            if (typeof amount !== 'number') return '¥0.00';
+            return '¥' + amount.toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatExplanationText(text) {
+            return text.replace(/\n/g, '<br>');
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>

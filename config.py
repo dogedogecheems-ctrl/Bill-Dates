@@ -339,3 +339,47 @@ class Config:
         'bond': {'name': '债券', 'icon': '📜'},
         'stock': {'name': '股票', 'icon': '📈'}
     }
+
+
+"""
+智能金融助手 - 配置文件
+包含Qwen API相关配置信息
+"""
+
+# Qwen API配置
+QWEN_API_KEY = "your-api-key"  # Qwen API Key
+QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"  # Qwen API endpoint
+QWEN_MODEL = "qwen3-max"  # 使用的模型
+
+# Flask配置
+FLASK_HOST = "127.0.0.1"  # Flask服务器地址
+FLASK_PORT = 5001  # Flask服务器端口
+FLASK_DEBUG = True  # 调试模式
+
+# 日志配置
+LOG_FILE = "backend/system.log"  # 日志文件路径
+LOG_LEVEL = "INFO"  # 日志级别
+
+# MPT算法配置
+MIN_PORTFOLIO_WEIGHT = 0.0  # 最小投资组合权重
+MAX_PORTFOLIO_WEIGHT = 1.0  # 最大投资组合权重
+WEIGHT_SUM_TOLERANCE = 1e-6  # 权重和的容差
+
+# 风险评分映射配置
+RISK_SCENARIO_MAPPING = {
+    "a) 卖出止损": 2,      # 保守型
+    "b) 继续持有": 5,      # 稳健型
+    "c) 加仓买入": 8       # 激进型
+}
+
+RISK_FOCUS_MAPPING = {
+    "a) 本金绝对安全": 1,       # 极度保守
+    "b) 跑赢通胀": 4,           # 稳健保守
+    "c) 获得远超市场的收益，哪怕风险很高": 9  # 激进
+}
+
+KNOWLEDGE_LEVEL_MAPPING = {
+    "a) 小白": 2,          # 投资新手，风险承受能力较低
+    "b) 略有了解": 5,      # 有一定投资经验
+    "c) 经验丰富": 8       # 投资专家，风险承受能力较高
+}
