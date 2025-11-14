@@ -31,7 +31,7 @@
 - 关键财务指标
 - AI财务洞察
 
-### 🛡️ 财务保障
+### 📈 理财管理
 - 风险评估问卷
 - 个性化产品推荐
 - 理财产品搜索
@@ -126,6 +126,9 @@ finance-app/
 ├── services.py            # 业务逻辑服务
 ├── config.py              # 配置文件
 ├── init_db.py             # 数据库初始化脚本
+├── utils                  # 辅助工具
+├── mpt_solver.py          # MPT算法
+├── qwen_service.py        # AI算法工具
 ├── requirements.txt       # Python依赖
 ├── README.md              # 项目说明
 ├── static/                # 静态文件目录
