@@ -27,7 +27,7 @@ pip install -r requirements.txt
 # 检查数据库文件
 if [ ! -f "instance/finance.db" ]; then
     echo "🗄️  初始化数据库..."
-    Python init_db.py
+    python3 init_db.py
 else
     echo "✅ 数据库已存在"
 fi
@@ -39,4 +39,4 @@ echo "🔌 API地址: http://localhost:5000/api"
 echo "📝 日志输出:"
 echo "----------------------------------------"
 
-Python app.py
+python3 app.py

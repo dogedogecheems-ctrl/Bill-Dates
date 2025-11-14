@@ -224,8 +224,13 @@ finance-app/
 ## 部署指南
 
 ### 测试环境部署
-1. windows平台点击start.bat进行自动化部署
-2. Linux/Mac平台点击run.sh进行自动化部署
+#### windows平台
+1. 点击start.bat进行自动化部署
+2. 浏览器访问127.0.0.1:5000
+
+#### Linux/Mac
+1. Linux/Mac平台点击run.sh进行自动化部署
+2. 浏览器访问127.0.0.1:5000
 
 ### 生产环境部署
 1. 设置环境变量
@@ -244,7 +249,6 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ## 🙏 致谢
 
 - [Qwen](https://qwen.ai/) - AI模型支持
-- [Vue.js](https://vuejs.org/) - 前端框架
 - [Flask](https://flask.palletsprojects.com/) - 后端框架
 - [Tailwind CSS](https://tailwindcss.com/) - CSS框架
 - [Chart.js](https://www.chartjs.org/) - 图表库
