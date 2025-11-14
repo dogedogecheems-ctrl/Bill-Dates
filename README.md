@@ -223,7 +223,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 ## 许可证
 
-本项目采用 GPL-v3 许可证 - 查看 [LICENS E](./LICENSE) 文件了解详情。
+本项目采用 GPL-v3 许可证 - 查看 [LICENSE](./LICENSE) 文件了解详情。
 
 ## 更新日志
 

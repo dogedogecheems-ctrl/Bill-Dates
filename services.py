@@ -398,7 +398,18 @@ class AIAdviceService:
             response = self.client.chat.completions.create(
                 model=Config.AI_MODEL,
                 messages=[
-                    {"role": "system", "content": "你是一个专业的理财顾问，请为用户提供实用、安全的财务建议。"},
+                    {"role": "system", "content": """你是一位专业的个人金融顾问，擅长基于现代投资组合理论为用户提供财务健康建议。
+
+重要格式要求：
+1. 严格禁止使用任何Markdown格式标记，包括但不限于：
+   - 标题标记：#, ##, ### 等
+   - 粗体标记：**, __
+   - 斜体标记：*, _
+   - 行内代码标记：`
+   - 列表标记：-, *, + 等
+2. 所有标题和段落仅使用纯文本和换行符分隔
+3. 如果需要分段，请直接使用换行符
+4. 使用简洁、清晰的纯文本格式输出"""},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=1000,
@@ -474,7 +485,18 @@ class AIAdviceService:
             response = self.client.chat.completions.create(
                 model=Config.AI_MODEL,
                 messages=[
-                    {"role": "system", "content": "你是一个专业的投资顾问，请根据用户的风险承受能力提供合适的投资建议。"},
+                    {"role": "system", "content": """你是一位专业的金融投资顾问，擅长基于现代投资组合理论为用户提供投资建议。请用专业、易懂的语言解释投资组合配置的原理。
+
+重要格式要求：
+1. 严格禁止使用任何Markdown格式标记，包括但不限于：
+   - 标题标记：#, ##, ### 等
+   - 粗体标记：**, __
+   - 斜体标记：*, _
+   - 行内代码标记：`
+   - 列表标记：-, *, + 等
+2. 所有标题和段落仅使用纯文本和换行符分隔
+3. 如果需要分段，请直接使用换行符
+4. 使用简洁、清晰的纯文本格式输出"""},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=1200,

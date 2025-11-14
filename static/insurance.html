@@ -1441,9 +1441,14 @@
                         </div>
                         
                         <!-- 搜索栏 -->
-                        <div class="search-container">
-                            <div class="search-icon">🔍</div>
-                            <input type="text" id="productSearch" class="search-input" placeholder="搜索理财产品...">
+                        <div class="search-container flex items-center gap-3">
+                            <div class="flex-1 relative">
+                                <div class="search-icon">🔍</div>
+                                <input type="text" id="productSearch" class="search-input" placeholder="搜索理财产品...">
+                            </div>
+                            <button id="backToResults" class="btn btn-outline">
+                                ← 返回推荐结果
+                            </button>
                         </div>
                         
                         <!-- 产品列表 -->
@@ -1502,8 +1507,8 @@
                     <span class="text-xs">储蓄</span>
                 </a>
                 <a href="insurance.html" class="flex flex-col items-center justify-center text-green-400">
-                    <span class="text-lg mb-1">🛡️</span>
-                    <span class="text-xs">保障</span>
+                    <span class="text-lg mb-1">📈</span>
+                    <span class="text-xs">投资</span>
                 </a>
             </div>
         </nav>
@@ -1686,7 +1691,20 @@
             elements.submitButton.disabled = true;
             setupProductCategories();
             setupProductSearch();
-            showView('questionnaire');
+            // 检查是否有保存的结果数据
+            const savedResult = localStorage.getItem('investmentResult');
+            if (savedResult && checkResultValidity()) {
+                AppState.resultData = JSON.parse(savedResult);
+                showView('result');
+                renderResultView(AppState.resultData);
+            } else {
+                // 清除过期数据
+                if (savedResult) {
+                    localStorage.removeItem('investmentResult');
+                    localStorage.removeItem('lastAssessmentTime');
+                }
+                showView('questionnaire');
+            }
         }
 
         // 设置单选选项
@@ -1877,6 +1895,11 @@
                 input.addEventListener('input', validateForm);
                 input.addEventListener('change', validateForm);
             });
+
+            // 返回推荐结果按钮
+            document.getElementById('backToResults').addEventListener('click', () => {
+                showView('result');
+            });
         }
 
         // 显示指定视图
@@ -2042,6 +2065,10 @@
                 // 检查响应结果
                 if (result.success) {
                     AppState.resultData = result;
+                    // 保存到本地存储
+                    localStorage.setItem('investmentResult', JSON.stringify(result));
+                    localStorage.setItem('lastAssessmentTime', new Date().toISOString());
+
                     showView('result');
                     renderResultView(result);
                     
@@ -2131,8 +2158,20 @@
             });
         }
 
+        function checkResultValidity() {
+            const lastAssessmentTime = localStorage.getItem('lastAssessmentTime');
+            if (!lastAssessmentTime) return false;
+            
+            const daysSinceAssessment = (new Date() - new Date(lastAssessmentTime)) / (1000 * 60 * 60 * 24);
+            return daysSinceAssessment < 30; // 30天内有效
+        }
+
         // 处理重置
         function handleReset() {
+                // 清除本地存储
+            localStorage.removeItem('investmentResult');
+            localStorage.removeItem('lastAssessmentTime');
+
             // 重置表单
             elements.age.value = '';
             elements.annualInvestmentAmount.value = '';
@@ -2267,7 +2306,7 @@
                 <div class="questionnaire-card">
                     <div class="card-inner">
                         <h2 class="section-title">AI专业投资解释</h2>
-                        <p class="section-subtitle">由Qwen大模型基于MPT理论生成的专业分析</p>
+                        <p class="section-subtitle">由AI大模型基于MPT理论生成的专业分析</p>
 
                         <div class="explanation-content">
                             <div class="explanation-text">${formatExplanationText(theExplanation.qwen_explanation_text || '')}</div>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>财务保障 - 您的个人财务管家</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -48,6 +49,37 @@
         }
         .touch-feedback:active {
             transform: scale(0.98);
+        }
+        .ai-heading {
+            color: #2c3e50;
+            margin: 1.5rem 0 1rem 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .ai-list {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .ai-list-item {
+            margin: 0.5rem 0;
+            line-height: 1.6;
+        }
+
+        .ai-paragraph {
+            margin: 1rem 0;
+            line-height: 1.6;
+        }
+
+        .ai-divider {
+            margin: 1.5rem 0;
+            border: none;
+            border-top: 2px dashed #ddd;
+        }
+
+        strong {
+            color: #e74c3c;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -263,8 +295,8 @@
                 <span class="text-xs">储蓄</span>
             </a>
             <a href="insurance.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">🛡️</span>
-                <span class="text-xs">保障</span>
+                <span class="text-lg mb-1">📈</span>
+                <span class="text-xs">投资</span>
             </a>
         </div>
     </nav>
@@ -499,35 +531,11 @@
 
         // 格式化 AI 文本（支持 markdown 样式）
         function formatAIText(text) {
-            // 处理标题
-            text = text.replace(/^# (.*$)/gim, '<h4 class="ai-heading">$1</h4>');
-            text = text.replace(/^## (.*$)/gim, '<h5 class="ai-subheading">$1</h5>');
-            text = text.replace(/^### (.*$)/gim, '<h6 class="ai-subheading">$1</h6>');
-            
-            // 处理列表
-            text = text.replace(/^\d+\.\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
-            text = text.replace(/^-\s+(.*$)/gim, '<li class="ai-list-item">$1</li>');
-            
-            // 包装列表
-            text = text.replace(/(<li class="ai-list-item">.*<\/li>)/g, '<ul class="ai-list">$1</ul>');
-            
-            // 处理段落
-            const paragraphs = text.split('\n\n');
-            let formattedText = '';
-            
-            paragraphs.forEach(paragraph => {
-                if (paragraph.trim()) {
-                    if (!paragraph.startsWith('<') && !paragraph.endsWith('>')) {
-                        formattedText += `<p class="ai-paragraph">${paragraph}</p>`;
-                    } else {
-                        formattedText += paragraph;
-                    }
-                }
+            return marked.parse(text, {
+                breaks: true,
+                gfm: true
             });
-            
-            return formattedText;
         }
-        
 
         // 模态框控制
         function showAddBillModal() {

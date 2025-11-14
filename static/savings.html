@@ -265,8 +265,8 @@
                 <span class="text-xs">储蓄</span>
             </a>
             <a href="insurance.html" class="flex flex-col items-center justify-center text-gray-400">
-                <span class="text-lg mb-1">🛡️</span>
-                <span class="text-xs">保障</span>
+                <span class="text-lg mb-1">📈</span>
+                <span class="text-xs">投资</span>
             </a>
         </div>
     </nav>
@@ -555,57 +555,69 @@
         }
 
         // 显示统计模态框
-        function showStatsModal() {
+        async function showStatsModal() {
             const modal = document.getElementById('statsModal');
             const content = document.getElementById('statsModalContent');
             const statsContent = document.getElementById('statsContent');
             
-            // 显示基本统计信息
+            // 显示加载状态
             statsContent.innerHTML = `
-                <div class="space-y-4">
-                    <div class="text-center mb-4">
-                        <div class="text-4xl mb-2">📊</div>
-                        <h3 class="text-lg font-semibold text-gray-800">储蓄统计</h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="text-center p-3 bg-green-50 rounded-xl">
-                            <p class="text-xs text-gray-600 mb-1">总储蓄</p>
-                            <p class="text-lg font-bold text-green-600" id="modalTotalSavings">¥0</p>
-                        </div>
-                        <div class="text-center p-3 bg-blue-50 rounded-xl">
-                            <p class="text-xs text-gray-600 mb-1">本月储蓄</p>
-                            <p class="text-lg font-bold text-blue-600" id="modalMonthlySavings">¥0</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">进行中目标</span>
-                            <span class="font-medium text-orange-600" id="modalActiveGoals">0</span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100">
-                            <span class="text-gray-600">已完成目标</span>
-                            <span class="font-medium text-green-600" id="modalCompletedGoals">0</span>
-                        </div>
-                        <div class="flex justify-between py-2">
-                            <span class="text-gray-600">目标总数</span>
-                            <span class="font-medium text-blue-600" id="modalTotalGoals">0</span>
-                        </div>
-                    </div>
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <span class="ml-2 text-gray-600">加载中...</span>
                 </div>
             `;
             
-            // 更新统计数值
-            const stats = financeManager.savingsStats || {};
-            document.getElementById('modalTotalSavings').textContent = financeManager.formatCurrency(stats.totalSavings || 0);
-            document.getElementById('modalMonthlySavings').textContent = financeManager.formatCurrency(stats.monthlySavings || 0);
-            document.getElementById('modalActiveGoals').textContent = stats.activeGoals || 0;
-            document.getElementById('modalCompletedGoals').textContent = stats.completedGoals || 0;
-            document.getElementById('modalTotalGoals').textContent = (stats.activeGoals || 0) + (stats.completedGoals || 0);
-            
             modal.classList.remove('hidden');
             setTimeout(() => content.classList.remove('translate-y-full'), 10);
+            
+            try {
+                // 重新获取统计数据
+                const stats = await financeManager.getSavingsStats();
+                
+                // 更新统计内容
+                statsContent.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-2">📊</div>
+                            <h3 class="text-lg font-semibold text-gray-800">储蓄统计</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-3 bg-green-50 rounded-xl">
+                                <p class="text-xs text-gray-600 mb-1">总储蓄</p>
+                                <p class="text-lg font-bold text-green-600">${financeManager.formatCurrency(stats.totalSavings || 0)}</p>
+                            </div>
+                            <div class="text-center p-3 bg-blue-50 rounded-xl">
+                                <p class="text-xs text-gray-600 mb-1">本月储蓄</p>
+                                <p class="text-lg font-bold text-blue-600">${financeManager.formatCurrency(stats.monthlySavings || 0)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-600">进行中目标</span>
+                                <span class="font-medium text-orange-600">${stats.activeGoals || 0}</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-600">已完成目标</span>
+                                <span class="font-medium text-green-600">${stats.completedGoals || 0}</span>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <span class="text-gray-600">目标总数</span>
+                                <span class="font-medium text-blue-600">${(stats.activeGoals || 0) + (stats.completedGoals || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                statsContent.innerHTML = `
+                    <div class="text-center text-red-500 py-4">
+                        加载统计失败
+                    </div>
+                `;
+            }
         }
 
         function hideStatsModal() {

@@ -15,7 +15,6 @@ import os
 from datetime import datetime
 
 # 导入自定义模块
-from config import FLASK_HOST, FLASK_PORT, FLASK_DEBUG
 from utils import logger, validate_user_data
 from mpt_solver import MPTSolver
 from qwen_service import qwen_service
@@ -632,39 +631,6 @@ def clean_qwen_response(text: str) -> str:
     text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)
 
     return text.strip()
-
-@app.route('/test-template')
-def test_template():
-    """测试模板文件直接读取"""
-    try:
-        template_path = os.path.join(template_dir, 'index.html')
-        if os.path.exists(template_path):
-            with open(template_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return f"""
-            <h2>✅ 模板文件直接读取成功</h2>
-            <p><strong>文件路径:</strong> {template_path}</p>
-            <p><strong>文件大小:</strong> {len(content)} 字符</p>
-            <p><strong>内容预览:</strong></p>
-            <pre>{content[:500]}...</pre>
-            <hr>
-            <a href="/">返回主页</a> | <a href="/api/health">健康检查</a>
-            """
-        else:
-            return f"""
-            <h2>❌ 模板文件不存在</h2>
-            <p><strong>预期路径:</strong> {template_path}</p>
-            <hr>
-            <a href="/api/health">健康检查</a>
-            """
-    except Exception as e:
-        return f"""
-        <h2>❌ 读取模板文件出错</h2>
-        <p><strong>错误:</strong> {str(e)}</p>
-        <p><strong>文件路径:</strong> {template_path}</p>
-        <hr>
-        <a href="/api/health">健康检查</a>
-        """
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

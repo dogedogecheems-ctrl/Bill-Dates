@@ -347,18 +347,14 @@ class Config:
 """
 
 # Qwen API配置
-QWEN_API_KEY = "your-api-key"  # Qwen API Key
-QWEN_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"  # Qwen API endpoint
-QWEN_MODEL = "qwen3-max"  # 使用的模型
-
-# Flask配置
-FLASK_HOST = "127.0.0.1"  # Flask服务器地址
-FLASK_PORT = 5001  # Flask服务器端口
-FLASK_DEBUG = True  # 调试模式
+QWEN_API_KEY = os.environ.get('OPENAI_API_KEY')  # Qwen API Key
+QWEN_API_URL = os.environ.get('BASE_URL')+"/chat/completions" or "https://api.openai.com/v1/chat/completions"  # Qwen API endpoint
+QWEN_MODEL = os.environ.get('AI_MODEL') or "gpt-3.5-turbo" # 使用的模型
 
 # 日志配置
-LOG_FILE = "backend/system.log"  # 日志文件路径
-LOG_LEVEL = "INFO"  # 日志级别
+
+LOG_FILE = os.environ.get('LOG_FILE') or './logs/app.log'  # 日志文件路径
+LOG_LEVEL = os.environ.get('LOG_LEVEL') or 'INFO'  # 日志级别
 
 # MPT算法配置
 MIN_PORTFOLIO_WEIGHT = 0.0  # 最小投资组合权重
