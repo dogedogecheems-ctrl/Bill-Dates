@@ -69,6 +69,23 @@
 - **AI建议表 (ai_advice)**: AI生成的建议
 - **用户偏好表 (user_preferences)**: 用户设置
 
+## 📊 推荐算法说明
+
+### 现代投资组合理论 (MPT)
+
+本应用基于哈里·马科维茨的现代投资组合理论，通过以下步骤优化投资组合：
+
+1. **有效边界计算**：使用scipy.optimize.minimize计算投资组合的有效边界
+2. **风险评分映射**：将用户风险偏好（1-10分）映射到有效边界上的最优点
+3. **权重优化**：在给定风险水平下最大化收益，或在给定收益目标下最小化风险
+
+### 风险评分计算
+
+用户风险评分基于三个维度：
+- **风险场景选择**（权重50%）：面对亏损时的反应
+- **风险关注点**（权重20%）：投资的主要关注点
+- **投资知识水平**（权重30%）：投资经验和知识
+
 ## 安装和运行
 
 ### 环境要求
@@ -223,6 +240,14 @@ export OPENAI_API_KEY=your-openai-api-key
 pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
+
+## 🙏 致谢
+
+- [Qwen](https://qwen.ai/) - AI模型支持
+- [Vue.js](https://vuejs.org/) - 前端框架
+- [Flask](https://flask.palletsprojects.com/) - 后端框架
+- [Tailwind CSS](https://tailwindcss.com/) - CSS框架
+- [Chart.js](https://www.chartjs.org/) - 图表库
 
 ## 许可证
 
